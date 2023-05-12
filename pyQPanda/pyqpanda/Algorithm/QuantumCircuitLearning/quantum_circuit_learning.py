@@ -39,11 +39,9 @@ def ising_model_simulation(qubit_list,hamiltonian_coef2d,step,t):
     single_coef: coefficients of Xi,ai[i]
     double_coef:coefficients of ZjZk, Jjk[j][k]
     '''
-    single_coef=[]
-    for i in range(len(qubit_list)):
-        single_coef.append(hamiltonian_coef2d[i][i])
+    single_coef = [hamiltonian_coef2d[i][i] for i in range(len(qubit_list))]
     qcir=QCircuit()
-    for i in range(step):
+    for _ in range(step):
         qcir.insert(pauliX(qubit_list,single_coef,t/step)) \
             .insert(pauliZjZk(qubit_list,hamiltonian_coef2d,t/step))
     return qcir
@@ -91,10 +89,7 @@ def get_expectation(program,qubit_list):
             expect+=result[i]
     return expect   
 def parity(number):
-    check=0
-    for i in bin(number):
-        if i=='1':
-            check+=1
+    check = sum(1 for i in bin(number) if i=='1')
     return check%2
 class qcl:
     def __init__(self,
@@ -128,39 +123,42 @@ class qcl:
         return get_expectation(prog,[qubit_list[0]])
     
     def cost_funciton(self,qubit_list,train_data):
-        cost=0
-        for data in train_data:
-            cost+=(data[1]-self.get_function_value(qubit_list,data[0]))*(data[1]-self.get_function_value(qubit_list,data[0]))
-        return cost
+        return sum(
+            (data[1] - self.get_function_value(qubit_list, data[0]))
+            * (data[1] - self.get_function_value(qubit_list, data[0]))
+            for data in train_data
+        )
     
     def optimize(self,qubit_list,m_qulist,train_data,velocity=0.01):
         '''
         parameter optimization:optimize theta3d and coef
     
         '''
-    
+
         
         new_theta3d=copy.copy(self.theta3d)
-        grad1=0
-        for data in train_data:
-            grad1+=(self.get_function_value(qubit_list,data[0])-data[1])*self.get_expectation(qubit_list,data[0])*2
-        
+        grad1 = sum(
+            (self.get_function_value(qubit_list, data[0]) - data[1])
+            * self.get_expectation(qubit_list, data[0])
+            * 2
+            for data in train_data
+        )
         for i in range(self.layer):
             for j in range(self.qnum):
                 for k in range(3):
                     grad=0
                     for data in train_data:
-                        
+
                         self.theta3d[i][j][k]+=pi/2
                         qprog2=QProg()
                         qprog2.insert(learning_circuit(qubit_list,self.layer,self.theta3d,self.hamiltonian_coef3d,data[0],10))
-                        
+
                         qprog3=QProg()
                         self.theta3d[i][j][k]-=pi
                         qprog3.insert(learning_circuit(qubit_list,self.layer,self.theta3d,self.hamiltonian_coef3d,data[0],10))
-                        
+
                         self.theta3d[i][j][k]+=pi/2
-                        
+
                         result3=get_expectation(qprog2,m_qulist)
                         result4=get_expectation(qprog3,m_qulist)
                         grad+=self.coef*(self.get_function_value(qubit_list,data[0])-data[1])*(result3-result4)
@@ -174,10 +172,9 @@ class qcl:
         train quantum circuit
         
         '''
-        for i in range(step):
+        for _ in range(step):
             self.optimize(qubit_list,[qubit_list[0]],train_data,velocity)
-        cost=self.cost_funciton(qubit_list,train_data)
-        return cost
+        return self.cost_funciton(qubit_list,train_data)
 
         
 def generate_train_data(type,range):

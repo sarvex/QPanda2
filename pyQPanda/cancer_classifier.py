@@ -45,7 +45,7 @@ def data_shuffle_and_make_train_test(data, label, train_percentage = 0.8):
     n_train = int(n_data * train_percentage)
     n_test = n_data - n_train   
 
-    train_permutation = permutation[0:n_train]
+    train_permutation = permutation[:n_train]
     test_permutation = permutation[n_train:]
 
     return data[train_permutation], label[train_permutation], data[test_permutation], label[test_permutation]
@@ -120,15 +120,15 @@ def classifier():
 
     open("result.txt",'w+').close()
 
-    for i in range(1, iterations+1):            
+    for i in range(1, iterations+1):        
         with open("result.txt", 'a+') as fp:
             print("i:",i)
             loss = eval(cost_function,True)
             print(loss)
             back(exp,grad,leaf_set)
 
-            fp.write('i:{}\nloss:{}\n'.format(i, loss))
-            for variable in m:
+            fp.write(f'i:{i}\nloss:{loss}\n')
+            for variable, value in m.items():
                 m[variable] = beta1 * m[variable] + (1-beta1) * grad[variable]
                 v[variable] = beta2 * v[variable] + (1-beta2) * (grad[variable] ** 2)
                 m_estimate[variable] = m[variable] / (1-beta1 ** i)
@@ -136,8 +136,8 @@ def classifier():
                 raw_value = variable.get_value()
                 bias = learning_rate * m_estimate[variable] / (np.sqrt(v_estimate[variable])+ epsilon)
                 new_value =  raw_value - bias
-                variable.set_value(new_value)  
-                fp.write('variable:{}\nm:{}\nv:{}\n'.format(variable.get_value(), m[variable],v[variable]))
+                variable.set_value(new_value)
+                fp.write(f'variable:{variable.get_value()}\nm:{value}\nv:{v[variable]}\n')
             
 if __name__=="__main__":
     print("start")

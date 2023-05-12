@@ -18,13 +18,12 @@ def convert_operator(str):
     construct Hamiltonian based on str,str has molecule information
     '''
     terms=str.split(' +\n')
-    tuplelist=dict()
+    tuplelist = {}
     for term in terms:
         data=term.split(' ',1)        
         tuplelist[data[1][1:-1]]=eval(data[0])
 
-    operator=PauliOperator(tuplelist)    
-    return operator
+    return PauliOperator(tuplelist)
 
 def H2_energy_from_distance(distance):
     '''
@@ -59,19 +58,14 @@ def H2_energy_from_distance(distance):
 
 Atom_Name=['H', 'He', 'Li', 'Be', 'B', 'C', 'N', 'O', 'F', 'He', 'Na', 'Mg', 'Al', 'Si', 'P', 'S', 'Cl']
 Atom_Electron=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
-Atom_Dict=dict()
-for i in range(len(Atom_Name)):
-    Atom_Dict[Atom_Name[i]]=Atom_Electron[i]
+Atom_Dict = {Atom_Name[i]: Atom_Electron[i] for i in range(len(Atom_Name))}
     
 def get_electron_count(geometry):
     '''
     get electron number based on Atom_Dict,
     Atom_Dict={'H':1,'He':2,...,'CI':17}
     '''
-    n_electron = 0
-    for atom in geometry:
-        n_electron+=Atom_Dict[atom[0]]
-    return n_electron
+    return sum(Atom_Dict[atom[0]] for atom in geometry)
 
 
 def get_fermion_jordan_wigner(fermion_type, op_qubit):
@@ -82,10 +76,10 @@ def get_fermion_jordan_wigner(fermion_type, op_qubit):
     '''
     opstr=''
     for i in range(op_qubit):
-        opstr=opstr+'Z'+str(i)+' '
-    
-    opstr1=opstr+'X'+str(op_qubit)
-    opstr2=opstr+'Y'+str(op_qubit)
+        opstr = f'{opstr}Z{str(i)} '
+
+    opstr1 = f'{opstr}X{str(op_qubit)}'
+    opstr2 = f'{opstr}Y{str(op_qubit)}'
     if fermion_type == 'a':
         return PauliOperator({opstr1:1,opstr2:1j})
     elif fermion_type == 'c':
@@ -105,11 +99,11 @@ def get_ccs_n_term(n_qubit, n_electron):
         return 0
     param_n=0
     # ccsd is each electron jump to the excited level, and also each two
-    result_op=PauliOperator(dict())
-    for i in range(n_electron):
-        for ex in range(n_electron, n_qubit):
+    result_op = PauliOperator({})
+    for _ in range(n_electron):
+        for _ in range(n_electron, n_qubit):
             param_n+=1
-                    
+
     return param_n
 
 def get_ccsd_n_term(n_qubit, n_electron):
@@ -125,17 +119,17 @@ def get_ccsd_n_term(n_qubit, n_electron):
         return 0
     param_n=0
     # ccsd is each electron jump to the excited level, and also each two
-    result_op=PauliOperator(dict())
-    for i in range(n_electron):
-        for ex in range(n_electron, n_qubit):
+    result_op = PauliOperator({})
+    for _ in range(n_electron):
+        for _ in range(n_electron, n_qubit):
             param_n+=1
-    
+
     for i in range(n_electron):
-        for j in range(i+1,n_electron):
+        for _ in range(i+1,n_electron):
             for ex1 in range(n_electron,n_qubit):
-                for ex2 in range(ex1+1,n_qubit):
+                for _ in range(ex1+1,n_qubit):
                     param_n+=1
-                    
+
     return param_n
 
 def get_ccs(n_qubit, n_electron, param_list):
@@ -146,15 +140,15 @@ def get_ccs(n_qubit, n_electron, param_list):
     if n_electron>n_qubit:
         assert False
     elif n_electron==n_qubit:
-        return PauliOperator(dict())
+        return PauliOperator({})
     param_n=0
     # ccsd is each electron jump to the excited level, and also each two
-    result_op=PauliOperator(dict())
+    result_op = PauliOperator({})
     for i in range(n_electron):
         for ex in range(n_electron, n_qubit):
             result_op+=get_fermion_jordan_wigner('c',ex)*get_fermion_jordan_wigner('a',i)*param_list[param_n]
             param_n+=1
-            
+
     return result_op
         
 def get_ccsd(n_qubit, n_electron, param_list):
@@ -165,15 +159,15 @@ def get_ccsd(n_qubit, n_electron, param_list):
     if n_electron>n_qubit:
         assert False
     elif n_electron==n_qubit:
-        return PauliOperator(dict())
+        return PauliOperator({})
     param_n=0
     # ccsd is each electron jump to the excited level, and also each two
-    result_op=PauliOperator(dict())
+    result_op = PauliOperator({})
     for i in range(n_electron):
         for ex in range(n_electron, n_qubit):
             result_op+=get_fermion_jordan_wigner('c',ex)*get_fermion_jordan_wigner('a',i)*param_list[param_n]
             param_n+=1
-    
+
     for i in range(n_electron):
         for j in range(i+1,n_electron):
             for ex1 in range(n_electron,n_qubit):
@@ -183,7 +177,7 @@ def get_ccsd(n_qubit, n_electron, param_list):
                                get_fermion_jordan_wigner('a',j)*   \
                                get_fermion_jordan_wigner('a',i)* param_list[param_n]
                     param_n+=1
-                    
+
     return result_op
 
 
@@ -221,9 +215,7 @@ def transform_base(qubitlist,base):
             qcircuit.insert(H(qubitlist[i[1]]))
         elif i[0]=='Y':
             qcircuit.insert(RX(qubitlist[i[1]],pi/2))
-        elif i[0]=='Z':
-            pass
-        else:
+        elif i[0] != 'Z':
             assert False
     return qcircuit
 

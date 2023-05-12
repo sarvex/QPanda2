@@ -37,8 +37,8 @@ def draw_qprog(prog, output=None, scale=0.7, filename=None, with_logo=False, lin
         no return
 
     """
-    default_output = 'text'
     if output is None:
+        default_output = 'text'
         output = default_output
 
     text_pic = 'null'

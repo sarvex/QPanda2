@@ -32,9 +32,8 @@ def simulate_z_term(qubit_list, coef, t):
         prog.insert(parity_check_circuit(qubit_list))\
             .insert(RZ(qubit_list[-1],coef*t))\
             .insert(parity_check_circuit(qubit_list))
-    else:
-        if len(qubit_list)!=0:
-            prog.insert(RZ(qubit_list[0],coef*t))
+    elif len(qubit_list)!=0:
+        prog.insert(RZ(qubit_list[0],coef*t))
 
     return prog
 
@@ -55,7 +54,7 @@ def simulate_one_term(qubit_list, hamiltonian_term, t):
     if not hamiltonian_term:
         return prog
 
-    actual_qlist=list()
+    actual_qlist = []
     transform=QCircuit()
 
     for single_term in hamiltonian_term[0]:        
@@ -84,15 +83,14 @@ def simulate_pauliZ_hamiltonian(qubit_list,PauliOperator,t):
     @return: QCircuit
     '''
     prog=QCircuit()
-    
+
     if PauliOperator.isAllPauliZorI():
         Hamiltonian=PauliOperator.toHamiltonian(0)
         for op in Hamiltonian:
-            actual_qlist=[]
-            for single_term in op[0]:  
-                actual_qlist.append(qubit_list[single_term])
-            if len(actual_qlist)!=0:
-                prog.insert(simulate_z_term(actual_qlist, op[1], t))     
+            if actual_qlist := [
+                qubit_list[single_term] for single_term in op[0]
+            ]:
+                prog.insert(simulate_z_term(actual_qlist, op[1], t))
     else:
         throw("unmatched")
     return prog
@@ -114,7 +112,7 @@ def simulate_hamiltonian(qubit_list,PauliOperator,t,slices=3):
 
     prog=QCircuit()
     Hamiltonian=PauliOperator.toHamiltonian(0)
-    for i in range(slices):
+    for _ in range(slices):
         for op in Hamiltonian:
             prog.insert(simulate_one_term(qubit_list,op,t/slices))
 
@@ -226,18 +224,17 @@ def quantum_approximate_optimization_algorithm(
     else:
         prog.insert(meas_all(q,c))
         result=run_with_configuration(program=prog, shots=shots_, cbit_list=c)
-    
+
     #print(result)
     finalize()
     target=0
 
-    if not multiProcessing:      
-        for outcome in result:
-            if weight(graph,outcome)>target:
-                target=weight(graph,outcome)
-    else:
+    if multiProcessing:
         raise NotImplementedError()
 
+    for outcome in result:
+        if weight(graph,outcome)>target:
+            target=weight(graph,outcome)
     return -target
 
 def binding(graph, shots):
@@ -253,8 +250,8 @@ def qaoa_in_list(
 ):
     #print(arguments)
     step=len(arguments)//2
-    beta=list()
-    gamma=list()
+    beta = []
+    gamma = []
     for i in range(step):
         beta.append(arguments[i])
         gamma.append(arguments[i+step])
@@ -267,21 +264,19 @@ def qaoa_in_list(
         multiProcessing=multiProcessing,
         shots_=shots,
         dataType=dataType)
-    f=open("a.txt", 'a')
-    f.write(str(arguments)+' '+str(result)+'\n')
-    f.close()
+    with open("a.txt", 'a') as f:
+        f.write(f'{str(arguments)} {str(result)}' + '\n')
     #print(result)
     return result
 
 def qaoa(graph,step_=1,shots_=1000, method="Nelder-Mead"):
     gamma_=[]
     beta_=[]
-    for i in range(step_):
+    for _ in range(step_):
         gamma_.append(0)
-        beta_.append(0)    
+        beta_.append(0)
     initial_guess=gamma_+beta_
-    result = minimize(binding(graph,shots_), initial_guess, method=method)    
-    return result
+    return minimize(binding(graph,shots_), initial_guess, method=method)
 
 
 

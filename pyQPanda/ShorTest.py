@@ -31,10 +31,7 @@ def reorganizeData(measure_qubits, quick_meausre_result):
     return xdata, ydata
    
 def gcd(m,n):
-    if not n:
-        return m
-    else:
-        return gcd(n, m%n)
+    return m if not n else gcd(n, m%n)
   
 def MAJ(a, b, c):
     circ = QCircuit()
@@ -171,17 +168,15 @@ def constModAdd(qa, C, M, qb, qs1):
 def modreverse(c, m):
     if (c == 0):
         raise RecursionError('c is zero!')
-    
+
     if (c == 1):
         return 1
-    
+
     m1 = m
-    quotient = []
     quo = m // c
     remainder = m % c
 
-    quotient.append(quo)
-
+    quotient = [quo]
     while (remainder != 1):
         m = c
         c = remainder
@@ -197,18 +192,12 @@ def modreverse(c, m):
 
     rev1 = 1
     rev2 = quotient[-1]
-    reverse_list = quotient[0:-1]
+    reverse_list = quotient[:-1]
     reverse_list.reverse()
     for i in reverse_list:
         rev1 = rev1 + rev2 * i
-        temp = rev1
-        rev1 = rev2
-        rev2 = temp
-
-    if ((len(quotient) % 2) == 0):
-        return rev2
-
-    return m1 - rev2
+        rev1, rev2 = rev2, rev1
+    return rev2 if ((len(quotient) % 2) == 0) else m1 - rev2
     
 
 def constModMul(qa, const_num, M, qs1, qs2, qs3):
@@ -280,11 +269,11 @@ def shorAlg(base, M):
 
     if (gcd(base, M) != 1):
         raise('Invalid base! base and M must be mutually prime')
-    
+
     binary_len = 0
-    while M >> binary_len != 0 :
-        binary_len = binary_len + 1
-    
+    while M >> binary_len != 0:
+        binary_len += 1
+
     machine = init_quantum_machine(QMachineType.CPU_SINGLE_THREAD)
 
     qa = machine.qAlloc_many(binary_len*2)

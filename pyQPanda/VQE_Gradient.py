@@ -34,17 +34,17 @@ def get_ccsd_var(qn, en, para):
         assert False
     if en == qn:
         return VarFermionOperator()
-    
+
     if get_ccsd_n_term(qn, en) != len(para):
         assert False
-    
+
     cnt = 0
     var_fermion_op = VarFermionOperator()
     for i in range(en):
         for ex in range(en, qn):
-            var_fermion_op += VarFermionOperator(str(ex) + "+ " + str(i), para[cnt])
+            var_fermion_op += VarFermionOperator(f"{str(ex)}+ {str(i)}", para[cnt])
             cnt += 1
-            
+
     return var_fermion_op
     
     #for i in range(en):
@@ -65,21 +65,11 @@ def get_fermion_jordan_wigner(fermion_item):
 
     for i in fermion_item:
         op_qubit = i[0]
-        op_str = ""
-        for j in range(op_qubit):
-            op_str += "Z" + str(j) + " "
+        op_str = "".join(f"Z{str(j)} " for j in range(op_qubit))
+        op_str1 = f"{op_str}X{str(op_qubit)}"
+        op_str2 = f"{op_str}Y{str(op_qubit)}"
 
-        op_str1 = op_str + "X" + str(op_qubit)
-        op_str2 = op_str + "Y" + str(op_qubit)
-
-        pauli_map = {}
-        pauli_map[op_str1] = 0.5
-
-        if i[1]:
-            pauli_map[op_str2] = -0.5j
-        else:
-            pauli_map[op_str2] = 0.5j
-
+        pauli_map = {op_str1: 0.5, op_str2: -0.5j if i[1] else 0.5j}
         pauli *= PauliOperator(pauli_map)
 
     return pauli
@@ -168,7 +158,7 @@ def simulate_hamiltonian_var(qubit_list,var_pauli,t,slices=3):
     '''
     vqc = VariationalQuantumCircuit()
 
-    for i in range(slices):
+    for _ in range(slices):
         for j in var_pauli.data():
             term = j[0][0]
             vqc.insert(simulate_one_term_var(qubit_list, term, j[1].real(), t/slices))
@@ -178,10 +168,7 @@ def simulate_hamiltonian_var(qubit_list,var_pauli,t,slices=3):
 def GradientDescent(mol_pauli, n_qubit, n_en, iters):
     n_para = get_ccsd_n_term(n_qubit, n_electron)
 
-    var_para = []
-    for i in range(n_para):
-        var_para.append(var(0.5, True))
-    
+    var_para = [var(0.5, True) for _ in range(n_para)]
     fermion_cc = get_ccsd_var(n_qubit, n_en, var_para)
     pauli_cc = JordanWignerTransformVar(fermion_cc)
     ucc = cc_to_ucc_hamiltonian_var(pauli_cc)
@@ -198,14 +185,14 @@ def GradientDescent(mol_pauli, n_qubit, n_en, iters):
     leaves = gd_optimizer.get_variables()
 
     min_energy=float('inf')
-    for i in range(iters):
+    for _ in range(iters):
         gd_optimizer.run(leaves, 0)
         loss_value = gd_optimizer.get_loss()
-    
+
         print(loss_value)
         if loss_value < min_energy:
             min_energy = loss_value
-    
+
     return min_energy
 #获取原子对应的电子数
 def getAtomElectronNum(atom):
@@ -214,19 +201,13 @@ def getAtomElectronNum(atom):
         'Na':11, 'Mg':12, 'Al':13, 'Si':14, 'P':15, 'S':16, 'Cl':17, 'Ar':18
     }
 
-    if (not atom_electron_map.__contains__(atom)):
-        return 0
-
-    return atom_electron_map[atom]
+    return atom_electron_map[atom] if atom_electron_map.__contains__(atom) else 0
 #主函数
 if __name__=="__main__":    
     distances = [x * 0.1 for x in range(2, 25)]
     molecule = "H 0 0 0\nH 0 0 {0}"
 
-    molecules = []
-    for d in distances:
-        molecules.append(molecule.format(d))
-
+    molecules = [molecule.format(d) for d in distances]
     chemistry_dict = {
         "mol":"",
         "multiplicity":1,

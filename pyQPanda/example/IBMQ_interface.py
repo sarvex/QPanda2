@@ -4,9 +4,9 @@ import unittest
 import pyqpanda.backends.IBM.executeOnIBMQ as IBMQexecute
 import math
 class Test_IBMQ(unittest.TestCase):
-    def testIBMQOnPypanda(outputLog = True):
+    def testIBMQOnPypanda(self):
         ibmExecute = IBMQexecute.CExecuteOnIBMQ()
-        ibmExecute.outputTestLog = outputLog
+        ibmExecute.outputTestLog = self
 
         #save account to local side
         try:
@@ -37,8 +37,8 @@ class Test_IBMQ(unittest.TestCase):
         cir.insert(H(q[1])).insert(cir2.dagger()).insert(CR(q[1], q[2], math.pi/2))
 
         prog.insert(H(q[0])).insert(S(q[2]))\
-            .insert(cir.dagger())\
-            .insert(CNOT(q[0], q[1])).insert(CZ(q[1], q[2])).insert(measure_all(q,c))
+                .insert(cir.dagger())\
+                .insert(CNOT(q[0], q[1])).insert(CZ(q[1], q[2])).insert(measure_all(q,c))
 
         #print(type((IBMQ_BACKENDS)))
         #print(type((IBMQ_BACKENDS.IBMQ_QASM_SIMULATOR)))

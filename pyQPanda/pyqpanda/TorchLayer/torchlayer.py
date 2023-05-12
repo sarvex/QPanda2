@@ -53,15 +53,12 @@ class TorchLayer(Module):
 
         if self.input_arg not in sig:
             raise TypeError(
-                "Circuit must include an argument with name {} for inputting data".format(
-                    self.input_arg
-                )
+                f"Circuit must include an argument with name {self.input_arg} for inputting data"
             )
 
         if self.input_arg in set(weight_shapes.keys()):
             raise ValueError(
-                "{} argument should not have its dimension specified in "
-                "weight_shapes".format(self.input_arg)
+                f"{self.input_arg} argument should not have its dimension specified in weight_shapes"
             )
 
         param_kinds = [p.kind for p in sig.values()]
@@ -69,15 +66,15 @@ class TorchLayer(Module):
         if inspect.Parameter.VAR_POSITIONAL in param_kinds:
             raise TypeError("Cannot have a variable number of positional arguments")
 
-        if inspect.Parameter.VAR_KEYWORD not in param_kinds:
-            if set(weight_shapes.keys()) | {self.input_arg} != set(sig.keys()):
-                raise ValueError("Must specify a shape for every non-input parameter in the Circuit")
+        if inspect.Parameter.VAR_KEYWORD not in param_kinds and set(
+            weight_shapes.keys()
+        ) | {self.input_arg} != set(sig.keys()):
+            raise ValueError("Must specify a shape for every non-input parameter in the Circuit")
 
     def forward(self, inputs):  # pylint: disable=arguments-differ
         if len(inputs.shape) > 1:
-            reconstructor = []
             x=torch.unbind(inputs)[len(inputs.shape)-1]
-            reconstructor.append(self._evaluate_qnode(x))
+            reconstructor = [self._evaluate_qnode(x)]
             return torch.stack(reconstructor)
 
         return self._evaluate_qnode(inputs)
@@ -88,8 +85,7 @@ class TorchLayer(Module):
             **{self.input_arg: x},
             **{arg: weight.to(x) for arg, weight in self.qweight.items()},
         }
-        res=TorchModel.apply(self.func,kwargs)
-        return res
+        return TorchModel.apply(self.func,kwargs)
     _input_arg = "inputs"
 
     @property

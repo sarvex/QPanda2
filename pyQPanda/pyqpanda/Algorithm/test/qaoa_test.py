@@ -8,5 +8,4 @@ from pyqpanda.Algorithm.hamiltonian_simulation import *
 
 def qaoa_test(graph,step_=1,shots_=100,method='Powell'):
 
-    result=qaoa(graph,step_,shots_, method)
-    return result
+    return qaoa(graph,step_,shots_, method)

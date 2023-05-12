@@ -16,12 +16,10 @@ def _getFuncVarList(node):
         raise
 
     if node.type == "parameters":
-        vallist = node.children[1:-1]
-        return vallist
+        return node.children[1:-1]
     elif hasattr(node, "children"):
         for child in node.children:
-            varlist = _getFuncVarList(child)
-            if varlist:
+            if varlist := _getFuncVarList(child):
                 return varlist
     else:
         return None
@@ -40,7 +38,7 @@ def getFuncVarStr(func_decl, var_name: str) -> str:
         try:
             varlist = _getFuncVarList(ast)
         except:
-            raise Exception("some error in "+ func_decl)
+            raise Exception(f"some error in {func_decl}")
 
     var_str = ""
     for var_node in varlist:
@@ -49,8 +47,7 @@ def getFuncVarStr(func_decl, var_name: str) -> str:
             if _matchVarName(child, var_name):
                 start_pos = var_node.start_pos[1]
                 end_pos = var_node.end_pos[1]
-                var_str = func_decl[start_pos: end_pos]
-                return var_str
+                return func_decl[start_pos: end_pos]
 
 
 if __name__ == "__main__":

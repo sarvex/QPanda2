@@ -9,9 +9,9 @@ def parity_check_circuit(qubit_list):
 
 def simulateZTerm_VQC(qubit_list,coef,time):
     vqc=VariationalQuantumCircuit()
-    if 0==len(qubit_list):
+    if len(qubit_list) == 0:
         return vqc
-    elif 1==len(qubit_list):
+    elif len(qubit_list) == 1:
         vqc.insert(VariationalQuantumGate_RZ(qubit_list[0], -coef * time*2))
     else:
         vqc.insert(parity_check_circuit(qubit_list))\
@@ -22,14 +22,9 @@ def simulateZTerm_VQC(qubit_list,coef,time):
 def simulatePauliZHamiltonian_VQC(qubit_list,Hamiltonian,time):
     vqc=VariationalQuantumCircuit()
     for i in range(len(Hamiltonian)):
-        tmp_vec=[]
         item=Hamiltonian[i]
         map=item[0]
-        for iter in map:
-            if 'Z'!=map[iter]:
-                pass
-            tmp_vec.append(qubit_list[iter])
-        if 0!=len(tmp_vec):
+        if tmp_vec := [qubit_list[iter] for iter in map]:
             vqc.insert(simulateZTerm_VQC(qubit_list=tmp_vec,coef=item[1],time=time))
     return vqc
 
@@ -67,25 +62,25 @@ def noisy_qaoa(Hamiltonian,noise,step):
     now=time.time()
     now=time.localtime(now)
     now=time.strftime("%Y%m%d %H%M%S",now)
-    result_fname="result-"+now+".txt"
+    result_fname = f"result-{now}.txt"
     with open(result_fname, 'a+') as fp:
-        fp.write('Problem Hamiltonian:{}\n'.format(Hamiltonian.toString()))
-        fp.write('step={}\n'.format(step))
-        fp.write('noise:{}\n\n'.format(noise))
+        fp.write(f'Problem Hamiltonian:{Hamiltonian.toString()}\n')
+        fp.write(f'step={step}\n')
+        fp.write(f'noise:{noise}\n\n')
 
     for i in range(iterations):
         loss=eval(loss1,True)
         with open(result_fname, 'a+') as fp:
             # loss = eval(loss1,True)
             print("Loss: ", loss)
-            fp.write('i:{}\nloss:{}\n'.format(i, loss))
+            fp.write(f'i:{i}\nloss:{loss}\n')
             back(exp,grad,leaf_set)
             print("gamma",gamma.get_value())
             print("gamma grad",grad[gamma])
             print("beta",beta.get_value())
             print("beta grad",grad[beta])
             gamma.set_value(gamma.get_value() - learning_rate * grad[gamma])
-            beta.set_value(beta.get_value() - learning_rate * grad[beta])    
+            beta.set_value(beta.get_value() - learning_rate * grad[beta])
     machine.finalize()
     destroy_quantum_machine(machine)
     

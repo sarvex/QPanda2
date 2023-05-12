@@ -7,8 +7,6 @@ try:
     HAS_MATPLOTLIB = True
 except:
     HAS_MATPLOTLIB = False
-    pass
-
 import numpy as np
 from numpy import pi
 from scipy import sparse
@@ -136,8 +134,12 @@ def plot_bloch_multivector(state, title='', fig_size=None):
         bloch_state = list(
             map(lambda x: np.real(np.trace(np.dot(x.to_matrix(), state))),
                 pauli_singles))
-        plot_bloch_vector(bloch_state, "qubit " + str(qubit), axis_obj=axis_obj,
-                          fig_size=fig_size)
+        plot_bloch_vector(
+            bloch_state,
+            f"qubit {str(qubit)}",
+            axis_obj=axis_obj,
+            fig_size=fig_size,
+        )
     fig.suptitle(title, fontsize=16)
     if get_backend() in ['module://ipykernel.pylab.backend_inline',
                          'nbAgg']:
@@ -213,8 +215,7 @@ class PlotVector:
         y = w_1 * y_2 + y_1 * w_2 + z_1 * x_2 - x_1 * z_2
         z = w_1 * z_2 + z_1 * w_2 + x_1 * y_2 - y_1 * x_2
 
-        result = PlotVector.from_value(np.array((w, x, y, z)))
-        return result
+        return PlotVector.from_value(np.array((w, x, y, z)))
 
     def _multiply_with_vector(self, v):
         q_2 = PlotVector.from_value(np.append((0.0), v))
@@ -222,8 +223,7 @@ class PlotVector:
 
     def get_conjugate(self):
         w, x, y, z = self._val
-        result = PlotVector.from_value(np.array((w, -x, -y, -z)))
-        return result
+        return PlotVector.from_value(np.array((w, -x, -y, -z)))
 
     def __repr__(self):
         theta, v = self.get_axisangle()
@@ -244,9 +244,13 @@ class PlotVector:
 
 
 def bloch_plot_dict(frames_per_gate):
-    bloch_dict = dict()
-    bloch_dict['x'] = ('x', PlotVector.from_axisangle(
-        np.pi / frames_per_gate, [1, 0, 0]), '#1a8bbc')
+    bloch_dict = {
+        'x': (
+            'x',
+            PlotVector.from_axisangle(np.pi / frames_per_gate, [1, 0, 0]),
+            '#1a8bbc',
+        )
+    }
     bloch_dict['y'] = ('y', PlotVector.from_axisangle(
         np.pi / frames_per_gate, [0, 1, 0]), '#c02ecc')
     bloch_dict['z'] = ('z', PlotVector.from_axisangle(
@@ -352,25 +356,21 @@ def plot_bloch_circuit(circuit,
             if gate.name == 'rx':
                 quaternion = PlotVector.from_axisangle(
                     rad / frames_per_gate, [1, 0, 0])
-                list_of_circuit_gates.append(
-                    ('rx:'+str(theta), quaternion, '#f39c12'))
+                list_of_circuit_gates.append((f'rx:{str(theta)}', quaternion, '#f39c12'))
             elif gate.name == 'ry':
                 quaternion = PlotVector.from_axisangle(
                     rad / frames_per_gate, [0, 1, 0])
-                list_of_circuit_gates.append(
-                    ('ry:'+str(theta), quaternion, '#0c93bf'))
+                list_of_circuit_gates.append((f'ry:{str(theta)}', quaternion, '#0c93bf'))
             elif gate.name == 'rz':
                 quaternion = PlotVector.from_axisangle(
                     rad / frames_per_gate, [0, 0, 1])
-                list_of_circuit_gates.append(
-                    ('rz:'+str(theta), quaternion, '#a06aad'))
+                list_of_circuit_gates.append((f'rz:{str(theta)}', quaternion, '#a06aad'))
             elif gate.name == 'u1':
                 quaternion = PlotVector.from_axisangle(
                     rad / frames_per_gate, [0, 0, 1])
-                list_of_circuit_gates.append(
-                    ('u1:'+str(theta), quaternion, '#69a45a'))
+                list_of_circuit_gates.append((f'u1:{str(theta)}', quaternion, '#69a45a'))
 
-    if len(list_of_circuit_gates) == 0:
+    if not list_of_circuit_gates:
         raise RuntimeError("Nothing to visualize.")
 
     starting_pos = normalize(np.array([0, 0, 1]))

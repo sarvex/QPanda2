@@ -18,18 +18,18 @@ class InitQMachine:
 class Test_Grover_qubit_topology(unittest.TestCase):
 
 
-    def draw_graph(adjacent_matrix):
+    def draw_graph(self):
         G = nx.Graph()
-        size = np.shape(adjacent_matrix)
+        size = np.shape(self)
         point = np.arange(0,size[1]).tolist()
         G.add_nodes_from(point)
         total_weight = 0
         edglist=[]
         for i in range(size[1]):
             for j in range(size[1]):
-                if 0 != adjacent_matrix[j][i]:
-                    G.add_edge(i, j, weight=adjacent_matrix[j][i])
-                    total_weight += adjacent_matrix[j][i]
+                if self[j][i] != 0:
+                    G.add_edge(i, j, weight=self[j][i])
+                    total_weight += self[j][i]
         # G=nx.Graph(edglist)
 
         pos = nx.circular_layout(G)

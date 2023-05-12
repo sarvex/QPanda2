@@ -6,8 +6,7 @@ from functools import partial
 import numpy as np
 def _fit_func(x, *params):
     A, B, p = params
-    y = A * p ** x + B
-    return y
+    return A * p ** x + B
 
 def _residuals(p, y, x, func):
     return y-func(x, *p)
@@ -15,8 +14,7 @@ def _residuals(p, y, x, func):
 def RMSE(x, y1, y2):
     variances = list(map(lambda x, y : (x-y)**2, y1, y2))
     variance = np.sum(variances)
-    rmse = np.sqrt(variance / len(x))
-    return rmse
+    return np.sqrt(variance / len(x))
 
 def _least_sq_fit_step(xdata, ydata, p0, func):
     x = xdata
@@ -48,9 +46,7 @@ def _get_fidelity(x, y):
     p = param[2]
     rc = (1 - p) * (1 - 1 / 2)  # clifford错误率
     rg = rc / 1.875  # 每个门错误率
-    fidelity = 1-rg
-    #return p, rc, rg, fit_y
-    return fidelity
+    return 1-rg
 
 
 if __name__=="__main__":

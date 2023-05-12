@@ -9,10 +9,7 @@ if __name__=="__main__":
     distances = [x * 0.1 for x in range(2, 25)]
     molecule = "H 0 0 0\nH 0 0 {0}"
 
-    molecules = []
-    for d in distances:
-        molecules.append(molecule.format(d))
-
+    molecules = [molecule.format(d) for d in distances]
     chemiq = ChemiQ()
     chemiq.setMolecules(molecules)
     chemiq.setCharge(0)
@@ -25,7 +22,7 @@ if __name__=="__main__":
     chemiq.setOptimizerFatol(200)
     chemiq.setOptimizerDisp(True)
     chemiq.exec()
-    
+
     value = chemiq.getEnergies()
     print(value)
 

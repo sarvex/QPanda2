@@ -164,9 +164,7 @@ def complex_phase_cmap():
                      (0.75, 0.0, 0.0),
                      (1.00, 1.0, 1.0))}
 
-    cmap = mpl.colors.LinearSegmentedColormap('phase_colormap', cdict, 256)
-
-    return cmap
+    return mpl.colors.LinearSegmentedColormap('phase_colormap', cdict, 256)
 
 
 def config_color_array(color):
@@ -249,10 +247,7 @@ def plot_state_city(state, title="", figsize=None, color=None, ax_real=None, ax_
         fc1 = config_colors(position_x, position_y,
                             zpos, dx, dy, dzr, color[0])
         for idx, cur_zpos in enumerate(zpos):
-            if dzr[idx] > 0:
-                zorder = 2
-            else:
-                zorder = 0
+            zorder = 2 if dzr[idx] > 0 else 0
             b1 = axia_1.bar3d(position_x[idx], position_y[idx], cur_zpos,
                               dx[idx], dy[idx], dzr[idx],
                               alpha=alpha, zorder=zorder)
@@ -274,12 +269,11 @@ def plot_state_city(state, title="", figsize=None, color=None, ax_real=None, ax_
         if max_dzr != min_dzr:
             axia_1.axes.set_zlim3d(
                 np.min(dzr), max(np.max(dzr) + 1e-9, max_dzi))
+        elif min_dzr == 0:
+            axia_1.axes.set_zlim3d(np.min(dzr), max(
+                np.max(dzr)+1e-9, np.max(dzi)))
         else:
-            if min_dzr == 0:
-                axia_1.axes.set_zlim3d(np.min(dzr), max(
-                    np.max(dzr)+1e-9, np.max(dzi)))
-            else:
-                axia_1.axes.set_zlim3d(auto=True)
+            axia_1.axes.set_zlim3d(auto=True)
         axia_1.get_autoscalez_on()
         axia_1.w_xaxis.set_ticklabels(row_names, fontsize=14, rotation=45,
                                       ha='right', va='top')
@@ -293,10 +287,7 @@ def plot_state_city(state, title="", figsize=None, color=None, ax_real=None, ax_
         fc2 = config_colors(position_x, position_y,
                             zpos, dx, dy, dzi, color[1])
         for idx, cur_zpos in enumerate(zpos):
-            if dzi[idx] > 0:
-                zorder = 2
-            else:
-                zorder = 0
+            zorder = 2 if dzi[idx] > 0 else 0
             b2 = axia_2.bar3d(position_x[idx], position_y[idx], cur_zpos,
                               dx[idx], dy[idx], dzi[idx],
                               alpha=alpha, zorder=zorder)
@@ -316,17 +307,14 @@ def plot_state_city(state, title="", figsize=None, color=None, ax_real=None, ax_
         axia_2.set_xticks(np.arange(0.5, length_x+0.5, 1))
         axia_2.set_yticks(np.arange(0.5, length_y+0.5, 1))
         if min_dzi != max_dzi:
-            eps = 0
+            axia_2.axes.set_zlim3d(np.min(dzi), max(np.max(dzr)+1e-9, np.max(dzi) + 0))
+        elif min_dzi == 0:
+            axia_2.set_zticks([0])
+            eps = 1e-9
             axia_2.axes.set_zlim3d(np.min(dzi), max(
                 np.max(dzr)+1e-9, np.max(dzi)+eps))
         else:
-            if min_dzi == 0:
-                axia_2.set_zticks([0])
-                eps = 1e-9
-                axia_2.axes.set_zlim3d(np.min(dzi), max(
-                    np.max(dzr)+1e-9, np.max(dzi)+eps))
-            else:
-                axia_2.axes.set_zlim3d(auto=True)
+            axia_2.axes.set_zlim3d(auto=True)
 
         axia_2.w_xaxis.set_ticklabels(row_names, fontsize=14, rotation=45,
                                       ha='right', va='top')
@@ -372,9 +360,7 @@ def plot_density_matrix(M, xlabels=None, ylabels=None,
     key = 0.0
     for matrix in M:
         for value in matrix:
-            if (key < abs(value)):
-                key = abs(value)
-
+            key = max(key, abs(value))
     z_axis_limit = index_array[(int)(key / 0.2)]
 
     n = np.size(M)

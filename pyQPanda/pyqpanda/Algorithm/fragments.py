@@ -19,7 +19,7 @@ def two_qubit_oracle(function,qubits):
     '''
     if function=='f(x)=x':
         return CNOT(qubits[0],qubits[1])
-    if function=='f(x)=x+1' or function=='f(x)=x XOR 1':
+    if function in ['f(x)=x+1', 'f(x)=x XOR 1']:
         return QCircuit().insert(X(qubits[0]))\
                          .insert(CNOT(qubits[0],qubits[1]))\
                          .insert(X(qubits[0]))
@@ -58,11 +58,13 @@ def diffusion_operator(qubits):
     Diffusion operator.\n
     2|s><s|-I
     '''      
-    return single_gate_apply_to_all(H, qubits) \
-            .insert(single_gate_apply_to_all(X,qubits)) \
-            .insert(Z(qubits[0]).control(qubits[1:(len(qubits))])) \
-            .insert(single_gate_apply_to_all(X,qubits)) \
-            .insert(single_gate_apply_to_all(H,qubits))
+    return (
+        single_gate_apply_to_all(H, qubits)
+        .insert(single_gate_apply_to_all(X, qubits))
+        .insert(Z(qubits[0]).control(qubits[1:]))
+        .insert(single_gate_apply_to_all(X, qubits))
+        .insert(single_gate_apply_to_all(H, qubits))
+    )
 
 def set_zero(qubit,cbit):
     '''

@@ -16,9 +16,10 @@ def loss_func(para_list, qubit_number, electron_number, Hamiltonian):
     fermion_cc =get_ccsd(qubit_number, electron_number, para_list)
     pauli_cc = JordanWignerTransform(fermion_cc)
     ucc = cc_to_ucc_hamiltonian(pauli_cc)
-    expectation=0
-    for component in Hamiltonian:
-        expectation+=get_expectation(qubit_number, electron_number, ucc, component)
+    expectation = sum(
+        get_expectation(qubit_number, electron_number, ucc, component)
+        for component in Hamiltonian
+    )
     expectation=float(expectation.real)
     print(expectation)
     return ("", expectation)
@@ -57,19 +58,18 @@ def get_ccsd(qn, en, para):
     fermion_op = FermionOperator()
     for i in range(en):
         for ex in range(en, qn):
-            fermion_op += FermionOperator(str(ex) + "+ " + str(i), para[cnt])
+            fermion_op += FermionOperator(f"{str(ex)}+ {str(i)}", para[cnt])
             cnt += 1   
-    
+
     for i in range(n_electron):
         for j in range(i+1,n_electron):
             for ex1 in range(n_electron,n_qubit):
                 for ex2 in range(ex1+1,n_qubit):
                     fermion_op += FermionOperator(
-                        str(ex2)+"+ "+str(ex1)+"+ "+str(j)+" "+str(i),
-                        para[cnt]
+                        f"{str(ex2)}+ {str(ex1)}+ {str(j)} {str(i)}", para[cnt]
                     )
                     cnt += 1
-                    
+
     return fermion_op
 #JW变换，将FermionOperator转换成PauliOperator
 def JordanWignerTransform(fermion_op):
@@ -84,21 +84,11 @@ def get_fermion_jordan_wigner(fermion_item):
 
     for i in fermion_item:
         op_qubit = i[0]
-        op_str = ""
-        for j in range(op_qubit):
-            op_str += "Z" + str(j) + " "
+        op_str = "".join(f"Z{str(j)} " for j in range(op_qubit))
+        op_str1 = f"{op_str}X{str(op_qubit)}"
+        op_str2 = f"{op_str}Y{str(op_qubit)}"
 
-        op_str1 = op_str + "X" + str(op_qubit)
-        op_str2 = op_str + "Y" + str(op_qubit)
-
-        pauli_map = {}
-        pauli_map[op_str1] = 0.5
-
-        if i[1]:
-            pauli_map[op_str2] = -0.5j
-        else:
-            pauli_map[op_str2] = 0.5j
-
+        pauli_map = {op_str1: 0.5, op_str2: -0.5j if i[1] else 0.5j}
         pauli *= PauliOperator(pauli_map)
 
     return pauli
@@ -169,7 +159,7 @@ def simulate_hamiltonian(qubit_list,pauli,t,slices=3):
     '''
     circuit =QCircuit()
 
-    for i in range(slices):
+    for _ in range(slices):
         for op in pauli.data():
             term = op[0][0]
             circuit.insert(
@@ -224,20 +214,14 @@ def parity_check(number, terms):
     number: quantum state
     terms: a single term of PauliOperator, like"[(0, X), (1, Y)]"
     '''
-    check=0
     number=number[::-1]
-    for i in terms:
-        if number[i]=='1':
-            check+=1
+    check = sum(1 for i in terms if number[i]=='1')
     return check%2
 #非梯度下降优化算法
 def optimize_by_no_gradient(mol_pauli, n_qubit, n_en, iters):
     n_para = get_ccsd_n_term(n_qubit, n_electron)
 
-    para_vec = []
-    for i in range(n_para):
-        para_vec.append(0.5)
-
+    para_vec = [0.5 for _ in range(n_para)]
     no_gd_optimizer = OptimizerFactory.makeOptimizer(OptimizerType.NELDER_MEAD)
     no_gd_optimizer.setMaxIter(iters)
     no_gd_optimizer.setMaxFCalls(iters)
@@ -260,19 +244,13 @@ def getAtomElectronNum(atom):
         'Na':11, 'Mg':12, 'Al':13, 'Si':14, 'P':15, 'S':16, 'Cl':17, 'Ar':18
     }
 
-    if (not atom_electron_map.__contains__(atom)):
-        return 0
-
-    return atom_electron_map[atom]
+    return atom_electron_map[atom] if atom_electron_map.__contains__(atom) else 0
 #主函数
 if __name__=="__main__":    
     distances = [x * 0.1 for x in range(2, 25)]
     molecule = "H 0 0 0\nH 0 0 {0}"
 
-    molecules = []
-    for d in distances:
-        molecules.append(molecule.format(d))
-
+    molecules = [molecule.format(d) for d in distances]
     chemistry_dict = {
         "mol":"",
         "multiplicity":1,

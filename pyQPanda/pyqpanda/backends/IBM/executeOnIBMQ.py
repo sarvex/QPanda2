@@ -41,7 +41,7 @@ class CExecuteOnIBMQ:
 
     def executeOntagBackend(self, QASMStr, backendStr, repeatTimes = 1024, credits = 5):
         provider = IBMQ.get_provider()
-        print("To get backend by name: %s" % backendStr)
+        print(f"To get backend by name: {backendStr}")
         ibmq_available_backends = provider.backends(backendStr)
         least_busy_device = least_busy(ibmq_available_backends)
         print("Will be Running on current least busy device: ", least_busy_device)

@@ -39,10 +39,7 @@ def single_gate(gate,qubit,angle=None):
     Raises:\n"
         run_fail: An error occurred in construct single gate node
     '''
-    if angle is None:
-        return gate(qubit)
-    else:
-        return gate(qubit,angle)
+    return gate(qubit) if angle is None else gate(qubit,angle)
 
 def meas_all(qubits, cbits):
     '''
@@ -78,10 +75,7 @@ def get_fidelity(result, shots, target_result):
     Raises:\n"
         run_fail: An error occurred in get_fidelity
     '''
-    correct_shots=0
-    for term in target_result:
-        if term in result:
-            correct_shots+=result[term]
+    correct_shots = sum(result[term] for term in target_result if term in result)
     return correct_shots / shots
 
 """ Module that monkey-patches the json module when it's imported so
@@ -99,9 +93,7 @@ def _new_default(self, obj):
     Returns:
         int
     '''
-    if isinstance(obj, pywrap.QMachineType):
-        return int(obj)  # Could also be obj.value
-    elif isinstance(obj, pywrap.NoiseModel):
+    if isinstance(obj, (pywrap.QMachineType, pywrap.NoiseModel)):
         return int(obj)  # Could also be obj.value
     else:
         return _saved_default

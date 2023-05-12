@@ -76,16 +76,11 @@ def generate_factor_hamiltonian(n_bit,offset=0):
         key='Z%d'%(i+offset)
         str_dict[key]=-2**(i-1)
     str_dict[' ']=(1<<(n_bit-1))-0.5
-    hamiltonian=PauliOperator(str_dict)
-    return hamiltonian
+    return PauliOperator(str_dict)
 
 def generate_drive_hamiltonian(qubit_number):
-    str_dict={}
-    for i in range(qubit_number):
-        key='X%d'%i
-        str_dict[key]=1
-    drive_hamiltonian=PauliOperator(str_dict)
-    return drive_hamiltonian
+    str_dict = {'X%d'%i: 1 for i in range(qubit_number)}
+    return PauliOperator(str_dict)
 
 def quantum_gradient_qaoa_test_factorize(number,factor1,factor2,step,gamma,beta,times_=100,optimizer=('Momentum',0.02,0.9),method=1,delta=1e-7,is_test=True):
     '''
@@ -97,11 +92,11 @@ def quantum_gradient_qaoa_test_factorize(number,factor1,factor2,step,gamma,beta,
     factor1_bin=bin(factor1)[2:]
     factor2_bin=bin(factor2)[2:]
     n_bit_factor1=len(target_bin)-1
-    n_bit_factor2=int(len(target_bin)/2)
+    n_bit_factor2 = len(target_bin) // 2
     while len(factor1_bin)!=n_bit_factor1:
-        factor1_bin='0'+factor1_bin
+        factor1_bin = f'0{factor1_bin}'
     while len(factor2_bin)!=n_bit_factor2:
-        factor2_bin='0'+factor2_bin
+        factor2_bin = f'0{factor2_bin}'
     target_str=factor2_bin+factor1_bin
     print('target_str',target_str)
     print('n_bit_factor1',n_bit_factor1)
@@ -144,10 +139,12 @@ def quantum_gradient_qaoa_test_factorize(number,factor1,factor2,step,gamma,beta,
     final_cost_value=qaoa_obj.get_cost_value(qubit_list_)
     finalize()
     qaoa_obj.gamma
-    #output=(final_cost_value,result[target_str],qaoa_obj.gamma,qaoa_obj.beta)
-    output={"cost value":final_cost_value,"target probability":result[target_str],
-    "gamma":qaoa_obj.gamma,"beta":qaoa_obj.beta}
-    return output
+    return {
+        "cost value": final_cost_value,
+        "target probability": result[target_str],
+        "gamma": qaoa_obj.gamma,
+        "beta": qaoa_obj.beta,
+    }
 def quantum_gradient_qaoa_test_factorize1(number=77,step=5):
     '''
     number:target number,assume it is a pseudoprime,such as 35,77
@@ -163,5 +160,15 @@ def quantum_gradient_qaoa_test_factorize1(number=77,step=5):
     hp=flatten(hp)
     gamma=(1-2*np.random.random_sample(step))*2
     beta=(1-2*np.random.random_sample(step))*pi/4
-    cost_value=quantum_gradient_qaoa_test(Hp=hp,Hd=hx,step=step,gamma=gamma,beta=beta,times_=100,optimizer=('Momentum',0.02,0.9),method=1,delta=1e-7,is_test=True)
-    return cost_value
+    return quantum_gradient_qaoa_test(
+        Hp=hp,
+        Hd=hx,
+        step=step,
+        gamma=gamma,
+        beta=beta,
+        times_=100,
+        optimizer=('Momentum', 0.02, 0.9),
+        method=1,
+        delta=1e-7,
+        is_test=True,
+    )

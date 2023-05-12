@@ -168,23 +168,22 @@ class QCloudMachine(unittest.TestCase):
         prog = QProg()
 
         prog.insert(hadamard_circuit(q))\
-            .insert(CZ(q[2], q[4]))\
-            .insert(CZ(q[3], q[1]))\
-            .insert(CZ(q[0], q[4]))\
-            .insert(RZ(q[3], PI / 4))\
-            .insert(RX(q[5], PI / 4))\
-            .insert(RX(q[4], PI / 4))\
-            .insert(RY(q[3], PI / 4))\
-            .insert(CZ(q[2], q[4]))\
-            .insert(RZ(q[3], PI / 4))\
-            .insert(RZ(q[2], PI / 4))\
-            .insert(CNOT(q[0], q[1]))\
-            .insert(measure_all(q, c))
+                .insert(CZ(q[2], q[4]))\
+                .insert(CZ(q[3], q[1]))\
+                .insert(CZ(q[0], q[4]))\
+                .insert(RZ(q[3], PI / 4))\
+                .insert(RX(q[5], PI / 4))\
+                .insert(RX(q[4], PI / 4))\
+                .insert(RY(q[3], PI / 4))\
+                .insert(CZ(q[2], q[4]))\
+                .insert(RZ(q[3], PI / 4))\
+                .insert(RZ(q[2], PI / 4))\
+                .insert(CNOT(q[0], q[1]))\
+                .insert(measure_all(q, c))
 
         result = QCM.run_with_configuration(prog, c, 1000)
 
-        stat = QCM.get_qstate()
-        return stat
+        return QCM.get_qstate()
 
 
     def test_cpu_state(self):
@@ -199,29 +198,28 @@ class QCloudMachine(unittest.TestCase):
         prog = QProg()
 
         prog.insert(hadamard_circuit(q))\
-            .insert(CZ(q[2], q[4]))\
-            .insert(CZ(q[3], q[1]))\
-            .insert(CZ(q[0], q[4]))\
-            .insert(RZ(q[3], PI / 4))\
-            .insert(RX(q[5], PI / 4))\
-            .insert(RX(q[4], PI / 4))\
-            .insert(RY(q[3], PI / 4))\
-            .insert(CZ(q[2], q[4]))\
-            .insert(RZ(q[3], PI / 4))\
-            .insert(RZ(q[2], PI / 4))\
-            .insert(CNOT(q[0], q[1]))\
-            .insert(RX(q[4], PI / 2))\
-            .insert(RX(q[5], PI / 2))\
-            .insert(CR(q[0], q[1], PI))\
-            .insert(RY(q[1], PI / 2))\
-            .insert(RY(q[2], PI / 2))\
-            .insert(RZ(q[3], PI / 4))\
-            .insert(CR(q[2], q[1], PI))\
-            .insert(measure_all(q, c))
+                .insert(CZ(q[2], q[4]))\
+                .insert(CZ(q[3], q[1]))\
+                .insert(CZ(q[0], q[4]))\
+                .insert(RZ(q[3], PI / 4))\
+                .insert(RX(q[5], PI / 4))\
+                .insert(RX(q[4], PI / 4))\
+                .insert(RY(q[3], PI / 4))\
+                .insert(CZ(q[2], q[4]))\
+                .insert(RZ(q[3], PI / 4))\
+                .insert(RZ(q[2], PI / 4))\
+                .insert(CNOT(q[0], q[1]))\
+                .insert(RX(q[4], PI / 2))\
+                .insert(RX(q[5], PI / 2))\
+                .insert(CR(q[0], q[1], PI))\
+                .insert(RY(q[1], PI / 2))\
+                .insert(RY(q[2], PI / 2))\
+                .insert(RZ(q[3], PI / 4))\
+                .insert(CR(q[2], q[1], PI))\
+                .insert(measure_all(q, c))
 
         result = QCM.run_with_configuration(prog, c, 1000)
-        stat = QCM.get_qstate()
-        return stat
+        return QCM.get_qstate()
 
     def cpu_qvm_fun(self):
 

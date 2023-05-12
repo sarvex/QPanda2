@@ -13,7 +13,7 @@ import itertools
 import numpy                                                                     
 import traceback        
                                                                                                                            
-def general_basis_change(general_tensor, rotation_matrix, key):                  
+def general_basis_change(general_tensor, rotation_matrix, key):
     """Change the basis of an general interaction tensor.                     
                                                                                  
     M'^{p_1p_2...p_n} = R^{p_1}_{a_1} R^{p_2}_{a_2} ...                          
@@ -43,32 +43,29 @@ def general_basis_change(general_tensor, rotation_matrix, key):
         transformed_general_tensor: general_tensor in the rotated basis.         
     """                                                                       
    
-    n_orbitals = rotation_matrix.shape[0]                                        
+    n_orbitals = rotation_matrix.shape[0]
     if general_tensor.shape[0] == 2 * n_orbitals:                                
         rotation_matrix = numpy.kron(rotation_matrix, numpy.eye(2))              
-                                                                                 
-    order = len(key)                                                             
+
+    order = len(key)
     if order > 26:                                                               
         raise ValueError('Order exceeds maximum order supported (26).')          
-                                                                                 
+
 
     subscripts_first = ''.join(chr(ord('a') + i) for i in range(order))          
-                                                                                 
-   
+
+
     subscripts_rest = ','.join(chr(ord('a') + i) +                               
                                chr(ord('A') + i) for i in range(order))          
-                                                                                 
-    subscripts = subscripts_first + ',' + subscripts_rest                        
-                                                                                 
-   
+
+    subscripts = f'{subscripts_first},{subscripts_rest}'                        
+                                                                                     
+
     rotation_matrices = [rotation_matrix.conj() if x else                        
                          rotation_matrix for x in key]                           
-                                                                                 
-   
-    transformed_general_tensor = numpy.einsum(subscripts,                        
-                                              general_tensor,                    
-                                              *rotation_matrices)                     
-    return transformed_general_tensor                                            
+
+
+    return numpy.einsum(subscripts, general_tensor, *rotation_matrices)                                            
                                                                                  
 class MyPolynomialTensor(object):                                                
     def __init__(self, n_body_tensors):                                          
@@ -79,7 +76,7 @@ class MyPolynomialTensor(object):
             key = next(key_iterator)                                             
         self.n_qubits = n_body_tensors[key].shape[0]                             
                                                                                  
-    def __getitem__(self, args):                                                 
+    def __getitem__(self, args):
         """Look up matrix element.                                            
                                                                                  
         Args:                                                                    
@@ -88,25 +85,23 @@ class MyPolynomialTensor(object):
                 returns                                                          
                 `my_tensor.n_body_tensors[1, 1, 0][6, 8, 2]`                     
         """                                                                   
-        if len(args) == 0:                                                       
-            return self.n_body_tensors[()]                                       
-        else:                                                                    
-            index = tuple([operator[0] for operator in args])                    
-            key = tuple([operator[1] for operator in args])                      
-            return self.n_body_tensors[key][index]                               
+        if len(args) == 0:
+            return self.n_body_tensors[()]
+        index = tuple(operator[0] for operator in args)
+        key = tuple(operator[1] for operator in args)
+        return self.n_body_tensors[key][index]                               
                                                                                  
-    def __iter__(self):                                                          
+    def __iter__(self):
         """Iterate over non-zero elements of PolynomialTensor."""          
-        def sort_key(key):                                                       
+        def sort_key(key):
             """This determines how the keys to n_body_tensors                 
-            should be sorted."""                                              
+            should be sorted."""                                          
            
-            if key == ():                                                        
-                return 0, 0                                                      
-            else:                                                                
-                key_int = int(''.join(map(str, key)))                            
-                return len(key), key_int                                         
-                                                                                 
+            if key == ():
+                return 0, 0
+            key_int = int(''.join(map(str, key)))
+            return len(key), key_int                                         
+
         for key in sorted(self.n_body_tensors.keys(), key=sort_key):             
             if key == ():                                                        
                 yield ()                                                         
@@ -117,11 +112,9 @@ class MyPolynomialTensor(object):
                     if n_body_tensor[index]:                                     
                         yield tuple(zip(index, key))                             
                                                                                  
-    def __str__(self):                                                           
+    def __str__(self):
         """Print out the non-zero elements of PolynomialTensor."""         
-        strings = []                                                             
-        for key in self:                                                         
-            strings.append('{} : {}\n'.format(key, self[key]))                  
+        strings = [f'{key} : {self[key]}\n' for key in self]
         return ''.join(strings) if strings else '0'       
 
 def get_molecular_hamiltonian(mints, canonical_orbitals, nuclear_repulsion,EQ_TOLERANCE = 1e-8):

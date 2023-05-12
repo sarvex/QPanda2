@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
-import platform  
+import platform
 import os
-  
+
 # Read in requirements.txt
 requirements = open('requirements.txt').readlines()
 requirements = [r.strip() for r in requirements]
@@ -12,12 +12,7 @@ with open(README_PATH) as readme_file:
     README = readme_file.read()
 
 is_win = (platform.system() == 'Windows')
-if is_win:
-    pd_files = ['*.pyd', '*.dll', '*.pyi']
-else :
-    pd_files = ['*.so', '*.pyi']
-
-
+pd_files = ['*.pyd', '*.dll', '*.pyi'] if is_win else ['*.so', '*.pyi']
 setup(  
     name = "pyqpanda",  
     version = "3.7.12",  
@@ -26,7 +21,7 @@ setup(
     install_requires=requirements,
     description="pyQPanda is Python wrapper of QPanda.",    
     packages = find_packages(),  
-    
+
     py_modules = ['psi4_wrapper'],
     package_data={
         '':pd_files

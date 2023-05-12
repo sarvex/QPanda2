@@ -24,14 +24,15 @@ def entanglement_test():
     qprog=QProg()
 
     # insert gates
-    qprog.insert(single_gate_apply_to_all(H,q_list)) \
-        .insert(CZ(q_list[1],q_list[0])) \
-        .insert(H(q_list[1])) \
-        .insert(meas_all(q_list[0:2],c_list[0:2]))
-    
+    qprog.insert(single_gate_apply_to_all(H, q_list)).insert(
+        CZ(q_list[1], q_list[0])
+    ).insert(H(q_list[1])).insert(meas_all(q_list[:2], c_list[:2]))
+
     shots_num=1000
-    result=run_with_configuration(program=qprog,shots=shots_num,cbit_list=c_list[0:2])
-  
+    result = run_with_configuration(
+        program=qprog, shots=shots_num, cbit_list=c_list[:2]
+    )
+
     print("Shots:",shots_num,"Results:",result)
     # finalize
     finalize()
@@ -43,14 +44,14 @@ def qif_test():
     The the qif module test
     """
     print(test_begin_str('Q-If Test'))
-    
+
     #init the environment
     init()
 
     #allocate resources
     q=qAlloc_many(10)
     c=cAlloc_many(10)
-    
+
     #set the true branch and false branch
     #ready for qif
     true_branch=X(q[2])
@@ -62,8 +63,10 @@ def qif_test():
         .insert(meas_all(q[1:3],c[1:3]))
 
     shots_num=1000
-    result=run_with_configuration(program=qprog,shots=shots_num,cbit_list=c[0:3])
-  
+    result = run_with_configuration(
+        program=qprog, shots=shots_num, cbit_list=c[:3]
+    )
+
     print("Shots:",shots_num,"Results:",result)
     # finalize
     finalize()

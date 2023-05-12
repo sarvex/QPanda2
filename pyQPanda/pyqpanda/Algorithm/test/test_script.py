@@ -37,7 +37,7 @@ def common_test():
     prog.insert(single_gate_apply_to_all(gate=H,qubit_list=q)) \
         .insert(meas_all(q,c))
 
-    result=run_with_configuration(program=prog, shots=100,cbit_list=c[0:4])
+    result = run_with_configuration(program=prog, shots=100, cbit_list=c[:4])
 
     print(result)
     finalize()

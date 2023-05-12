@@ -37,7 +37,7 @@ def generate_stub_for_c_module_costum(module_name: str,
     will be overwritten.
     """
     module = importlib.import_module(module_name)
-    assert is_c_module(module), '%s is not a C module' % module_name
+    assert is_c_module(module), f'{module_name} is not a C module'
     subdir = os.path.dirname(target)
     if subdir and not os.path.isdir(subdir):
         os.makedirs(subdir)
@@ -65,20 +65,16 @@ def generate_stub_for_c_module_costum(module_name: str,
         if name not in done and not inspect.ismodule(obj):
             type_str = strip_or_import(
                 get_type_fullname(type(obj)), module, imports)
-            variables.append('%s: %s' % (name, type_str))
-    output = []
-    for line in sorted(set(imports)):
-        output.append(line)
-    for line in variables:
-        output.append(line)
+            variables.append(f'{name}: {type_str}')
+    output = list(sorted(set(imports)))
+    output.extend(iter(variables))
     for line in types:
         if line.startswith('class') and output and output[-1]:
             output.append('')
         output.append(line)
     if output and functions:
         output.append('')
-    for line in functions:
-        output.append(line)
+    output.extend(iter(functions))
     output = add_typing_import(output)
     with open(target, 'w') as file:
         for line in output:
@@ -99,12 +95,12 @@ def refine_func_signature(docstr: str, func_name: str, is_overload: bool = False
         str: standard function signature like: def func_name(args...) -> ret_type : ...
     """
     funcsig_reg = re.compile(
-        (str(sigid) + ". " if is_overload else "") + func_name + r"\(.*?\) ->.*")
-    match_str = re.match(funcsig_reg, docstr)
-    if match_str:
-        func_str = re.search(func_name+r"\(.*?\) ->.*", match_str.group(0))
+        (f"{sigid}. " if is_overload else "") + func_name + r"\(.*?\) ->.*"
+    )
+    if match_str := re.match(funcsig_reg, docstr):
+        func_str = re.search(func_name+r"\(.*?\) ->.*", match_str[0])
         # complement signature to function declaration then give to python parser
-        func_str = "def " + func_str.group(0) + ": ..."
+        func_str = f"def {func_str[0]}: ..."
         return func_str
     else:
         return None
@@ -138,7 +134,7 @@ def generate_c_function_stub_costum(module: ModuleType,
     ret_type = 'None' if name == '__init__' and class_name else 'Any'
 
     if (
-        name in ("__new__", "__init__")
+        name in {"__new__", "__init__"}
         and name not in sigs
         and class_name
         and class_name in class_sigs
@@ -177,12 +173,8 @@ def generate_c_function_stub_costum(module: ModuleType,
         imports.append('from typing import overload')
     #TODO: logic branch too deep, need split
     if inferred:
-        # signature id for overload func, used to pick corresbonding signature from inferred docstring
-        sigid = 0
-        for signature in inferred:
+        for sigid, signature in enumerate(inferred, start=1):
             arg_sig = []
-            # in docstring, overload function signature start from 1.
-            sigid += 1
             for arg in signature.args:
                 if arg.name == self_var:
                     arg_def = self_var
@@ -192,28 +184,26 @@ def generate_c_function_stub_costum(module: ModuleType,
                         arg_def = '_none'  # None is not a valid argument name
 
                     if arg.type:
-                        arg_def += ": " + \
-                            strip_or_import(arg.type, module, imports)
+                        arg_def += f": {strip_or_import(arg.type, module, imports)}"
 
-                    # get function default value from func signature in __doc__
                     if arg.default:
                         if is_overloaded:
                             doc = docstr.split("\n")[3: -1]
                             for i in range(0, len(doc)):
-                                # get signature from overload function docstr
-                                func_str = refine_func_signature(
-                                    doc[i], name, is_overloaded, sigid)
-                                if func_str:
+                                if func_str := refine_func_signature(
+                                    doc[i], name, is_overloaded, sigid
+                                ):
                                     var_str = funcparser.getFuncVarStr(
                                         func_str, arg.name)
-                                    default_var = re.search(
-                                        r" = .{0,}", var_str)
-                                    if default_var:
-                                        # parsered default var may contains traill char ",", strip it
-                                        arg_def += default_var.group(
-                                            0).strip(",")
-                                    else:
-                                        arg_def += " = ..."
+                                    arg_def += (
+                                        default_var.group(0).strip(",")
+                                        if (
+                                            default_var := re.search(
+                                                r" = .{0,}", var_str
+                                            )
+                                        )
+                                        else " = ..."
+                                    )
                                     break
                         else:
                             # similar like overload function
@@ -221,30 +211,36 @@ def generate_c_function_stub_costum(module: ModuleType,
                                 docstr.split('\n')[0], name)
                             var_str = funcparser.getFuncVarStr(
                                 func_str, arg.name)
-                            default_var = re.search(r" = .{0,}", var_str)
-                            if default_var:
-                                arg_def += default_var.group(0).strip(",")
-                            else:
-                                arg_def += " = ..."
-
+                            arg_def += (
+                                default_var.group(0).strip(",")
+                                if (
+                                    default_var := re.search(
+                                        r" = .{0,}", var_str
+                                    )
+                                )
+                                else " = ..."
+                            )
                 arg_sig.append(arg_def)
 
             if is_overloaded:
                 output.append('@overload')
-            output.append('def {function}({args}) -> {ret}:'.format(
-                function=name,
-                args=", ".join(arg_sig),
-                ret=strip_or_import(signature.ret_type, module, imports)
-            ))
-            # append function summary from __doc__
-            output.append("    \"\"\"")
+            output.extend(
+                (
+                    'def {function}({args}) -> {ret}:'.format(
+                        function=name,
+                        args=", ".join(arg_sig),
+                        ret=strip_or_import(
+                            signature.ret_type, module, imports
+                        ),
+                    ),
+                    "    \"\"\"",
+                )
+            )
             if is_overloaded:
                 doc = docstr.split("\n")[3: -1]
                 for i in range(0, len(doc)):
-                    funcsig_reg = re.compile(
-                        str(sigid) + ". " + name + r"\(.*?\) ->.*")
-                    next_funcsig_reg = re.compile(
-                        str(sigid+1) + ". " + name + r"\(.*?\) ->.*")
+                    funcsig_reg = re.compile(f"{str(sigid)}. {name}" + r"\(.*?\) ->.*")
+                    next_funcsig_reg = re.compile(f"{str(sigid + 1)}. {name}" + r"\(.*?\) ->.*")
                     if re.match(funcsig_reg, doc[i]):
                         for j in range(i+2, len(doc)):
                             if re.match(next_funcsig_reg, doc[j]):
@@ -258,8 +254,7 @@ def generate_c_function_stub_costum(module: ModuleType,
                     if re.match(funcsig_reg, line):
                         continue
                     output.append('    {docline}'.format(docline=line))
-            output.append("    \"\"\"")
-            output.append("    ...\n")
+            output.extend(("    \"\"\"", "    ...\n"))
 
 
 def generate_c_type_stub_custom(module: ModuleType,

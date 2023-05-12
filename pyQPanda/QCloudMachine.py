@@ -174,8 +174,7 @@ def test_state():
 
     result = QCM.run_with_configuration(prog, c, 1000)
 
-    stat = QCM.get_qstate()
-    return stat
+    return QCM.get_qstate()
 
 
 def test_cpu_state():
@@ -211,8 +210,7 @@ def test_cpu_state():
         .insert(measure_all(q, c))
 
     result = QCM.run_with_configuration(prog, c, 1000)
-    stat = QCM.get_qstate()
-    return stat
+    return QCM.get_qstate()
 
 
 def test_init_state():

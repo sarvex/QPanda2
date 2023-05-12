@@ -18,7 +18,7 @@ class Test_Async_Run(unittest.TestCase):
         cv = qvm.cAlloc_many(4)
 
         prog = QProg()
-        for i in range(0, 1001):
+        for _ in range(0, 1001):
             prog.insert(X(qv))
 
         total_num = get_qgate_num(prog)
@@ -32,7 +32,7 @@ class Test_Async_Run(unittest.TestCase):
         # get aysnc run progress
         while not qvm.is_async_finished():
             processed_gate_num = qvm.get_processed_qgate_num()
-            print("processed_gate_num : {}/{}".format(processed_gate_num, total_num))
+            print(f"processed_gate_num : {processed_gate_num}/{total_num}")
             self.assertGreaterEqual(processed_gate_num, 0)
             self.assertLessEqual(processed_gate_num, total_num)
 
@@ -48,9 +48,9 @@ class Test_Async_Run(unittest.TestCase):
 
         qv2 = qvm2.qAlloc_many(4)
         cv2 = qvm2.cAlloc_many(4)
-        
+
         prog2 = QProg()
-        for i in range(0, 1001):
+        for _ in range(0, 1001):
             prog2.insert(X(qv2))
 
         result2 = qvm2.directly_run(prog2)

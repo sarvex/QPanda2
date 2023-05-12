@@ -27,12 +27,10 @@ def quantum_circuit_learning_test(function_kind):
     qlist=qAlloc_many(test.qnum)
     cost=test.function_learning(qlist,train_data,step=10,velocity=0.1)
     print('cost is:',cost)
-    y1=[]
-    for i in x:
-        y1.append(test.get_function_value(qlist,i))
+    y1 = [test.get_function_value(qlist,i) for i in x]
     print('second')
     print(test.theta3d)
-    print(test.coef)    
+    print(test.coef)
     plot(x,x*x,'g',x,y1,'b')
     show()
     finalize()

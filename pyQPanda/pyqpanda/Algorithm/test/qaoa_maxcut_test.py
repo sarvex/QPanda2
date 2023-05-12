@@ -8,8 +8,7 @@ from math import pi
 def generate_edge_library(dimension):
     edge_lib=[]
     for i in range(dimension):
-        for j in range(i+1,dimension):
-            edge_lib.append((i,j))
+        edge_lib.extend((i, j) for j in range(i+1,dimension))
     return edge_lib
 
 def generate_adjacent_matrix(dimension,n_edge):
@@ -33,23 +32,17 @@ def generate_maxcut_problem_Hamiltonian(adjacent_matrix):
             if adjacent_matrix[i][j]>0:
                 key='Z%d Z%d'%(i,j)
                 str_dict[key]=adjacent_matrix[i][j]/2
-    hamiltonian=PauliOperator(str_dict)
-    return hamiltonian
+    return PauliOperator(str_dict)
 def generate_drive_hamiltonian(qubit_number):
-    str_dict={}
-    for i in range(qubit_number):
-        key='X%d'%i
-        str_dict[key]=1
-    drive_hamiltonian=PauliOperator(str_dict)
-    return drive_hamiltonian    
+    str_dict = {'X%d'%i: 1 for i in range(qubit_number)}
+    return PauliOperator(str_dict)    
     
 def max_cut(adjacent_matrix):
     '''
     to modify
     '''
     dimension=len(adjacent_matrix)
-    max_sum={}
-    max_sum['sum']=0
+    max_sum = {'sum': 0}
     target_cut_list=[]
     all_cut=[]
     all_cut_sum=0
@@ -79,7 +72,7 @@ def target_list_to_str_list(target_list,dimension):
     for i in target_list:
         temp_str=bin(i)[2:]
         while len(temp_str)<dimension:
-            temp_str='0'+temp_str
+            temp_str = f'0{temp_str}'
         target_str_list.append(temp_str)
     return target_str_list
 
@@ -87,18 +80,18 @@ def generate_graph(dimension,n_edge):
     '''
     max_cut_str's sequence: v0v1v2...vd
     '''
-    graph_dict={}
     adjacent_matrix=generate_adjacent_matrix(dimension=dimension,n_edge=n_edge)
     max_sum=max_cut(adjacent_matrix)
     max_str=target_list_to_str_list(target_list=max_sum['target_list'],dimension=dimension)
-    graph_dict['adjacent_matrix']=adjacent_matrix
-    graph_dict['max_value']=max_sum['sum']
-    graph_dict['max_cut_str']=max_str
-    graph_dict['n_vertex']=dimension
-    graph_dict['n_edge']=n_edge
-    graph_dict['all_cut']=max_sum['all_cut']
-    graph_dict['all_cut_sum']=max_sum['all_cut_sum']
-    return graph_dict
+    return {
+        'adjacent_matrix': adjacent_matrix,
+        'max_value': max_sum['sum'],
+        'max_cut_str': max_str,
+        'n_vertex': dimension,
+        'n_edge': n_edge,
+        'all_cut': max_sum['all_cut'],
+        'all_cut_sum': max_sum['all_cut_sum'],
+    }
 
 # def qaoa_maxcut(graph,step,optimize_times):
     
@@ -147,15 +140,12 @@ def qaoa_maxcut_gradient_threshold(graph,step,threshold_value=0.05,optimize_time
     all_cut_list_new=all_cut_list.copy()
     for i in range(len(all_cut_list)):
         all_cut_list_new[i]=-all_cut_list[i]
-    
+
     adjacent_matrix=graph['adjacent_matrix']
     hp=generate_maxcut_problem_Hamiltonian(adjacent_matrix=adjacent_matrix)
     hp=hp+PauliOperator({'':-graph['all_cut_sum']/2})
     hd=generate_drive_hamiltonian(qubit_number)
-    if use_GPU:
-        machine_type=QMachineType.GPU
-    else:
-        machine_type=QMachineType.CPU
+    machine_type = QMachineType.GPU if use_GPU else QMachineType.CPU
     init(machine_type)
     qlist=qAlloc_many(qubit_number)
     #gamma=(1-2*np.random.random_sample(step))*pi

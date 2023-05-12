@@ -147,5 +147,8 @@ class DefaultStyle:
         self.cline = dic.pop('creglinestyle', self.cline)
 
         if dic:
-            warn('style option/s ({}) is/are not supported'.format(', '.join(dic.keys())),
-                 DeprecationWarning, 2)
+            warn(
+                f"style option/s ({', '.join(dic.keys())}) is/are not supported",
+                DeprecationWarning,
+                2,
+            )

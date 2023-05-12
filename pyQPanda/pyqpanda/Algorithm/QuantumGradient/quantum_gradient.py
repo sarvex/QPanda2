@@ -7,10 +7,7 @@ import numpy as np
 from pyqpanda.pyQPanda import *
 
 def parity_check(number):
-    check=0
-    for i in bin(number):
-        if i=='1':
-            check+=1
+    check = sum(1 for i in bin(number) if i=='1')
     return check%2
 def get_one_expectation_component(program,qubit_list):
     '''
@@ -91,20 +88,14 @@ class qaoa:
         prog.insert(single_gate_apply_to_all(gate=H, qubit_list=qubit_list))
         for i in range(self.step):
             prog.insert(simulate_pauliZ_hamiltonian(qubit_list,self.Hp,2*self.gamma[i]))\
-            .insert(pauliX_model(qubit_list,self.beta[i]))
+                .insert(pauliX_model(qubit_list,self.beta[i]))
         cost_value=0
 
-        if len(self.all_cut_value_list):
-            result=prob_run_list(program=prog,qubit_list=qubit_list,select_max=-1) 
-            cost_value=vector_dot(result,self.all_cut_value_list)
-            
-    
-            # cost_value=np.sum(np.array(result)*np.array(self.all_cut_value_list))
+        if not len(self.all_cut_value_list):
+            return get_expectation(qubit_list,prog,self.Hp)
 
-        else:
-            cost_value=get_expectation(qubit_list,prog,self.Hp)
-
-        return cost_value
+        result=prob_run_list(program=prog,qubit_list=qubit_list,select_max=-1)
+        return vector_dot(result,self.all_cut_value_list)
 
 
 
@@ -127,49 +118,41 @@ class qaoa:
         prog0.insert(single_gate_apply_to_all(gate=H, qubit_list=qubit_list))
         prog1.insert(single_gate_apply_to_all(gate=H, qubit_list=qubit_list))
         coef=0
-        if label[1]==0:
-            coef=2*self.Hp.ops[label[0]]
-        else:
-            coef=2
+        coef = 2*self.Hp.ops[label[0]] if label[1]==0 else 2
         for i in range(len(self.gamma)):
             if label[2]!=i:
                 prog0.insert(simulate_pauliZ_hamiltonian(qubit_list,self.Hp,2*self.gamma[i]))\
-                .insert(pauliX_model(qubit_list,self.beta[i]))
+                    .insert(pauliX_model(qubit_list,self.beta[i]))
                 prog1.insert(simulate_pauliZ_hamiltonian(qubit_list,self.Hp,2*self.gamma[i]))\
-                .insert(pauliX_model(qubit_list,self.beta[i]))
-            else:
-                if label[1]==0:
-                    '''
+                    .insert(pauliX_model(qubit_list,self.beta[i]))
+            elif label[1]==0:
+                '''
                     Hp:gamma
                     '''
-                    for j in self.Hp.ops:
-                        if j!=label[0]:
-                            prog0.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]))
-                            prog1.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]))
-                        else:
-                            prog0.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]+pi/2/self.Hp.ops[j]))
-                            prog1.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]-pi/2/self.Hp.ops[j]))
-                    prog0.insert(pauliX_model(qubit_list,self.beta[i]))
-                    prog1.insert(pauliX_model(qubit_list,self.beta[i]))
-                
-                elif label[1]==1:
-                    '''
+                for j in self.Hp.ops:
+                    if j == label[0]:
+                        prog0.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]+pi/2/self.Hp.ops[j]))
+                        prog1.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]-pi/2/self.Hp.ops[j]))
+                    else:
+                        prog0.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]))
+                        prog1.insert(simulate_one_term(qubit_list,j, self.Hp.ops[j],2*self.gamma[i]))
+                prog0.insert(pauliX_model(qubit_list,self.beta[i]))
+                prog1.insert(pauliX_model(qubit_list,self.beta[i]))
+
+            elif label[1]==1:
+                '''
                     Hd:beta
                     '''
-                    prog0.insert(simulate_pauliZ_hamiltonian(qubit_list,self.Hp,2*self.gamma[i]))
-                    prog1.insert(simulate_pauliZ_hamiltonian(qubit_list,self.Hp,2*self.gamma[i]))
-                    for j in range(self.qnum):
-                        if j!=label[0]:
-                            prog0.insert(RX(qubit_list[j],self.beta[i]*2))
-                            prog1.insert(RX(qubit_list[j],self.beta[i]*2))
-                        else:
-                            prog0.insert(RX(qubit_list[j],self.beta[i]*2+pi/2))
-                            prog1.insert(RX(qubit_list[j],self.beta[i]*2-pi/2))         
-        actual_qlist=[]
-
-
-        for i in label[3]:
-            actual_qlist.append(qubit_list[i[1]])
+                prog0.insert(simulate_pauliZ_hamiltonian(qubit_list,self.Hp,2*self.gamma[i]))
+                prog1.insert(simulate_pauliZ_hamiltonian(qubit_list,self.Hp,2*self.gamma[i]))
+                for j in range(self.qnum):
+                    if j!=label[0]:
+                        prog0.insert(RX(qubit_list[j],self.beta[i]*2))
+                        prog1.insert(RX(qubit_list[j],self.beta[i]*2))
+                    else:
+                        prog0.insert(RX(qubit_list[j],self.beta[i]*2+pi/2))
+                        prog1.insert(RX(qubit_list[j],self.beta[i]*2-pi/2))
+        actual_qlist = [qubit_list[i[1]] for i in label[3]]
         expectation0=get_one_expectation_component(prog0,actual_qlist)
         expectation1=get_one_expectation_component(prog1,actual_qlist)
         return (expectation0-expectation1)/2*coef
@@ -266,13 +249,14 @@ class qaoa:
 
     def bulit_in_optimizer(self,qubit_list,method='Powell'):
         def cost_function(parameter):
-            self.gamma=parameter[0:self.step]
+            self.gamma = parameter[:self.step]
             self.beta=parameter[self.step:]
             cost_value=self.get_cost_value(qubit_list)
             return cost_value
+
         output={}
         initial_guess=np.zeros(2*self.step)
-        initial_guess[0:self.step]=self.gamma
+        initial_guess[:self.step] = self.gamma
         initial_guess[self.step:]=self.beta
         result=minimize(cost_function,initial_guess,method=method)
         output['optimizer']={'opt':method}
@@ -298,8 +282,6 @@ class qaoa:
         momentum_list=np.zeros((self.step,2))
         optimize_times=0
         cost_value=0
-        #target_probability=0
-        output={}
         gradient=1
         while (gradient > threshold_value) and (optimize_times < max_times):
 
@@ -335,8 +317,14 @@ class qaoa:
                 print(optimize_times,'cost',cost_value)
             optimize_times+=1
             #target_probability=self.target_state_proability(qubit_list)['sum']
-        output['optimizer']={'opt':'momentum','learning_rate':learning_rate,'momentum':momentum}
-        output['target probability']=self.target_state_proability(qubit_list)
+        output = {
+            'optimizer': {
+                'opt': 'momentum',
+                'learning_rate': learning_rate,
+                'momentum': momentum,
+            },
+            'target probability': self.target_state_proability(qubit_list),
+        }
         #parameter optimization once needs run quantum program 4*step times
         output['times']=optimize_times*4*self.step
         output['target cost value']=self.target_value
@@ -356,11 +344,10 @@ class qaoa:
         second_order=np.zeros((self.step,2))
         optimize_times=0
         target_probability=0
-        output={}
         while (target_probability < threshold_value) and (optimize_times < max_times):
-            
+
             partial_derivative_list=self.get_partial_derivative(qubit_list,method,delta)
-            
+
             for i in range(self.step):
 
                 #grad1=self.get_grad(qubit_list,(0,i),method,delta)
@@ -396,8 +383,15 @@ class qaoa:
             if is_test:
                 cost_value=self.get_cost_value(qubit_list)
                 print(optimize_times,'cost',cost_value)
-        output['optimizer']={'opt':'Adam','learning_rate':learning_rate,'decay_rate_1':decay_rate_1,'decay_rate_2':decay_rate_2}
-        output['target probability']=self.target_state_proability(qubit_list)
+        output = {
+            'optimizer': {
+                'opt': 'Adam',
+                'learning_rate': learning_rate,
+                'decay_rate_1': decay_rate_1,
+                'decay_rate_2': decay_rate_2,
+            },
+            'target probability': self.target_state_proability(qubit_list),
+        }
         output['times']=optimize_times*4*self.step
         output['target cost value']=self.target_value
         output['cost value']=cost_value
@@ -415,7 +409,6 @@ class qaoa:
 
         optimize_times=0
         target_probability=0
-        output={}
         while (target_probability < threshold_value) and (optimize_times < max_times):
 
             partial_derivative_list=self.get_partial_derivative(qubit_list,method,delta)
@@ -430,8 +423,13 @@ class qaoa:
                 print(optimize_times,'cost',cost_value)
             optimize_times+=1
             target_probability=self.target_state_proability(qubit_list)
-        output['optimizer']={'opt':'Gradient descent','learning_rate':learning_rate}
-        output['target probability']=self.target_state_proability(qubit_list)
+        output = {
+            'optimizer': {
+                'opt': 'Gradient descent',
+                'learning_rate': learning_rate,
+            },
+            'target probability': self.target_state_proability(qubit_list),
+        }
         output['times']=optimize_times*4*self.step
         output['target cost value']=self.target_value
         output['cost value']=cost_value

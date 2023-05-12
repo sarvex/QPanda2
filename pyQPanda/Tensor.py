@@ -20,9 +20,7 @@ def pyqpanda_circuit():
     hamiltonian = 1.
 
     prog = pq.QProg()
-    prog << pq.X(qubits[0:2])\
-         << pq.Z(qubits[:2])\
-         << pq.H(qubits[:])
+    (prog << pq.X(qubits[:2]) << pq.Z(qubits[:2])) << pq.H(qubits[:])
 
     print(prog)
 

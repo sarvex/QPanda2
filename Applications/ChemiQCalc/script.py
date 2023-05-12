@@ -3,16 +3,16 @@ import os
 currentdir = os.path.abspath(__file__)
 currentdir = os.path.dirname(currentdir) + r"\ChemiQCalc.exe"
 
+optimizer_type = 'NELDER_MEAD'
+transform_type = 'JW'
+basis = 'sto-3g'
+ucctype = 'UCCSD'
+backend = 'CPU_SINGLE_THREAD'
+psi4dir = 'D:/ChemiQ_release'
+
 for iter in [10000]:
   for distance in [1.0,1.1,1.2,1.3,1.4, 1.5, 1.6,1.7,1.8,1.9,2.0]:
 
-    optimizer_type = 'NELDER_MEAD'
-    transform_type = 'JW'
-    basis = 'sto-3g'
-    ucctype = 'UCCSD'
-    backend = 'CPU_SINGLE_THREAD'
-    psi4dir = 'D:/ChemiQ_release'
-    
     datadir = 'LiH-{_distance}-iter-{_iter}-{_optimizer_type}-{_transform_type}-{_ucctype}'.format(
         _iter=iter, 
         _distance=distance, 

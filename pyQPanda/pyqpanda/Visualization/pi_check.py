@@ -62,16 +62,15 @@ def pi_check(inpt, eps=1e-6, output='text', ndigits=5):
         else:
             raise QError('pi_check parameter output should be text, '
                               'latex, mpl, or qasm.')
-        if abs(val) >= 1 - eps:
-            if abs(abs(val) - abs(round(val))) < eps:
-                val = int(round(val))
-                if val == 1:
-                    str_out = '{}'.format(pi)
-                elif val == -1:
-                    str_out = '-{}'.format(pi)
-                else:
-                    str_out = '{}{}'.format(val, pi)
-                return str_out
+        if abs(val) >= 1 - eps and abs(abs(val) - abs(round(val))) < eps:
+            val = int(round(val))
+            if val == 1:
+                str_out = '{}'.format(pi)
+            elif val == -1:
+                str_out = '-{}'.format(pi)
+            else:
+                str_out = '{}{}'.format(val, pi)
+            return str_out
 
         val = np.pi / single_inpt
         if abs(abs(val) - abs(round(val))) < eps:
@@ -133,7 +132,7 @@ def pi_check(inpt, eps=1e-6, output='text', ndigits=5):
     real, imag = map(normalize, [complex_inpt.real, complex_inpt.imag])
 
     if real == '0' and imag != '0':
-        return imag + 'j'
+        return f'{imag}j'
     elif real != 0 and imag != '0':
         return '{}+{}j'.format(real, imag)
     return real

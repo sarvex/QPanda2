@@ -290,36 +290,35 @@ class Bloch:
             raise Exception("No such convention.")
 
     def __str__(self):
-        string = ""
-        string += "Bloch data:\n"
+        string = "" + "Bloch data:\n"
         string += "-----------\n"
-        string += "Number of points:  " + str(len(self.points)) + "\n"
-        string += "Number of vectors: " + str(len(self.vectors)) + "\n"
+        string += f"Number of points:  {len(self.points)}" + "\n"
+        string += f"Number of vectors: {len(self.vectors)}" + "\n"
         string += "\n"
         string += "Bloch sphere properties:\n"
         string += "------------------------\n"
-        string += "font_color:      " + str(self.font_color) + "\n"
-        string += "font_size:       " + str(self.font_size) + "\n"
-        string += "frame_alpha:     " + str(self.frame_alpha) + "\n"
-        string += "frame_color:     " + str(self.frame_color) + "\n"
-        string += "frame_width:     " + str(self.frame_width) + "\n"
-        string += "point_color:     " + str(self.point_color) + "\n"
-        string += "point_marker:    " + str(self.point_marker) + "\n"
-        string += "point_size:      " + str(self.point_size) + "\n"
-        string += "sphere_alpha:    " + str(self.sphere_alpha) + "\n"
-        string += "sphere_color:    " + str(self.sphere_color) + "\n"
-        string += "figsize:         " + str(self.figsize) + "\n"
-        string += "vector_color:    " + str(self.vector_color) + "\n"
-        string += "vector_width:    " + str(self.vector_width) + "\n"
-        string += "vector_style:    " + str(self.vector_style) + "\n"
-        string += "vector_mutation: " + str(self.vector_mutation) + "\n"
-        string += "view:            " + str(self.view) + "\n"
-        string += "xlabel:          " + str(self.xlabel) + "\n"
-        string += "xlpos:           " + str(self.xlpos) + "\n"
-        string += "ylabel:          " + str(self.ylabel) + "\n"
-        string += "ylpos:           " + str(self.ylpos) + "\n"
-        string += "zlabel:          " + str(self.zlabel) + "\n"
-        string += "zlpos:           " + str(self.zlpos) + "\n"
+        string += f"font_color:      {str(self.font_color)}" + "\n"
+        string += f"font_size:       {str(self.font_size)}" + "\n"
+        string += f"frame_alpha:     {str(self.frame_alpha)}" + "\n"
+        string += f"frame_color:     {str(self.frame_color)}" + "\n"
+        string += f"frame_width:     {str(self.frame_width)}" + "\n"
+        string += f"point_color:     {str(self.point_color)}" + "\n"
+        string += f"point_marker:    {str(self.point_marker)}" + "\n"
+        string += f"point_size:      {str(self.point_size)}" + "\n"
+        string += f"sphere_alpha:    {str(self.sphere_alpha)}" + "\n"
+        string += f"sphere_color:    {str(self.sphere_color)}" + "\n"
+        string += f"figsize:         {str(self.figsize)}" + "\n"
+        string += f"vector_color:    {str(self.vector_color)}" + "\n"
+        string += f"vector_width:    {str(self.vector_width)}" + "\n"
+        string += f"vector_style:    {str(self.vector_style)}" + "\n"
+        string += f"vector_mutation: {str(self.vector_mutation)}" + "\n"
+        string += f"view:            {str(self.view)}" + "\n"
+        string += f"xlabel:          {str(self.xlabel)}" + "\n"
+        string += f"xlpos:           {str(self.xlpos)}" + "\n"
+        string += f"ylabel:          {str(self.ylabel)}" + "\n"
+        string += f"ylpos:           {str(self.ylpos)}" + "\n"
+        string += f"zlabel:          {str(self.zlabel)}" + "\n"
+        string += f"zlpos:           {str(self.zlpos)}" + "\n"
         return string
 
     def clear(self):
@@ -622,9 +621,7 @@ class Bloch:
                 for j in range(num)
             ]
             if any(abs(dist - dist[0]) / dist[0] > 1e-12):
-                # combine arrays so that they can be sorted together
-                zipped = list(zip(dist, range(num)))
-                zipped.sort()  # sort rates from lowest to highest
+                zipped = sorted(zip(dist, range(num)))
                 dist, indperm = zip(*zipped)
                 indperm = np.array(indperm)
             else:
@@ -647,7 +644,7 @@ class Bloch:
                     self.point_color * int(np.ceil(num / float(len(self.point_color))))
                 )
 
-                pnt_colors = pnt_colors[0:num]
+                pnt_colors = pnt_colors[:num]
                 pnt_colors = list(pnt_colors[indperm])
                 marker = self.point_marker[np.mod(k, len(self.point_marker))]
                 pnt_size = self.point_size[np.mod(k, len(self.point_size))]
@@ -685,7 +682,7 @@ class Bloch:
                 "horizontalalignment": "center",
                 "verticalalignment": "center",
             }
-            opts.update(annotation["opts"])
+            opts |= annotation["opts"]
             self.axes.text(vec[1], -vec[0], vec[2], annotation["text"], **opts)
 
     def show(self, title=""):
@@ -710,16 +707,15 @@ class Bloch:
         """
 
         self.render()
-        if dirc:
-            if not os.path.isdir(os.getcwd() + "/" + str(dirc)):
-                os.makedirs(os.getcwd() + "/" + str(dirc))
+        if dirc and not os.path.isdir(f"{os.getcwd()}/{str(dirc)}"):
+            os.makedirs(f"{os.getcwd()}/{str(dirc)}")
         if name is None:
             if dirc:
                 self.fig.savefig(
-                    os.getcwd() + "/" + str(dirc) + "/bloch_" + str(self.savenum) + "." + output
+                    f"{os.getcwd()}/{str(dirc)}/bloch_{str(self.savenum)}.{output}"
                 )
             else:
-                self.fig.savefig(os.getcwd() + "/bloch_" + str(self.savenum) + "." + output)
+                self.fig.savefig(f"{os.getcwd()}/bloch_{str(self.savenum)}.{output}")
         else:
             self.fig.savefig(name)
         self.savenum += 1

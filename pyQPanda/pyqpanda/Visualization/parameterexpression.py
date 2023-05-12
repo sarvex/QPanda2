@@ -79,10 +79,9 @@ class ParameterExpression():
                                   if p in free_parameters}
 
         if bound_symbol_expr.is_infinite:
-            raise ZeroDivisionError('Binding provided for expression '
-                                    'results in division by zero '
-                                    '(Expression: {}, Bindings: {}).'.format(
-                                        self, parameter_values))
+            raise ZeroDivisionError(
+                f'Binding provided for expression results in division by zero (Expression: {self}, Bindings: {parameter_values}).'
+            )
 
         return ParameterExpression(free_parameter_symbols, bound_symbol_expr)
 
@@ -110,14 +109,13 @@ class ParameterExpression():
                                                 parameter_map.keys())
 
         from sympy import Symbol
-        new_parameter_symbols = {p: Symbol(p.name)
-                                 for p in parameter_map.values()}
-
-        # Include existing parameters in self not set to be replaced.
-        new_parameter_symbols.update({p: s
-                                      for p, s in self._parameter_symbols.items()
-                                      if p not in parameter_map})
-
+        new_parameter_symbols = {
+            p: Symbol(p.name) for p in parameter_map.values()
+        } | {
+            p: s
+            for p, s in self._parameter_symbols.items()
+            if p not in parameter_map
+        }
         symbol_map = {
             self._parameter_symbols[old_param]: new_parameter_symbols[new_param]
             for old_param, new_param in parameter_map.items()
@@ -128,17 +126,20 @@ class ParameterExpression():
         return ParameterExpression(new_parameter_symbols, substituted_symbol_expr)
 
     def _raise_if_passed_unknown_parameters(self, parameters):
-        unknown_parameters = parameters - self.parameters
-        if unknown_parameters:
-            raise CircuitError('Cannot bind Parameters ({}) not present in '
-                               'expression.'.format([str(p) for p in unknown_parameters]))
+        if unknown_parameters := parameters - self.parameters:
+            raise CircuitError(
+                f'Cannot bind Parameters ({[str(p) for p in unknown_parameters]}) not present in expression.'
+            )
 
     def _raise_if_passed_non_real_value(self, parameter_values):
-        nonreal_parameter_values = {p: v for p, v in parameter_values.items()
-                                    if not isinstance(v, numbers.Real)}
-        if nonreal_parameter_values:
-            raise CircuitError('Expression cannot bind non-real or non-numeric '
-                               'values ({}).'.format(nonreal_parameter_values))
+        if nonreal_parameter_values := {
+            p: v
+            for p, v in parameter_values.items()
+            if not isinstance(v, numbers.Real)
+        }:
+            raise CircuitError(
+                f'Expression cannot bind non-real or non-numeric values ({nonreal_parameter_values}).'
+            )
 
     def _raise_if_parameter_names_conflict(self, inbound_parameters, outbound_parameters=None):
         if outbound_parameters is None:
@@ -149,11 +150,14 @@ class ParameterExpression():
         outbound_names = {p.name: p for p in outbound_parameters}
 
         shared_names = (self_names.keys() - outbound_names.keys()) & inbound_names.keys()
-        conflicting_names = {name for name in shared_names
-                             if self_names[name] != inbound_names[name]}
-        if conflicting_names:
-            raise CircuitError('Name conflict applying operation for parameters: '
-                               '{}'.format(conflicting_names))
+        if conflicting_names := {
+            name
+            for name in shared_names
+            if self_names[name] != inbound_names[name]
+        }:
+            raise CircuitError(
+                f'Name conflict applying operation for parameters: {conflicting_names}'
+            )
 
     def _apply_operation(self, operation, other, reflected=False):
         """Base method implementing math operations between Parameters and
@@ -228,15 +232,16 @@ class ParameterExpression():
         return self._apply_operation(operator.truediv, other, reflected=True)
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, str(self))
+        return f'{self.__class__.__name__}({str(self)})'
 
     def __str__(self):
         return str(self._symbol_expr)
 
     def __float__(self):
         if self.parameters:
-            raise TypeError('ParameterExpression with unbound parameters ({}) '
-                            'cannot be cast to a float.'.format(self.parameters))
+            raise TypeError(
+                f'ParameterExpression with unbound parameters ({self.parameters}) cannot be cast to a float.'
+            )
         return float(self._symbol_expr)
 
     def __copy__(self):

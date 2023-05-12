@@ -17,7 +17,7 @@ def chem_client(geometry,
                 run_fci=True,
                 hamiltonian_type='pauli',
                 url='http://117.71.57.182:2222'
-):    
+):
     '''
     client for the quantum chemistry simulation.
     Used to calculate the hamiltonian for a molecule.
@@ -39,5 +39,5 @@ def chem_client(geometry,
         'hamiltonian_type':hamiltonian_type
     }
     molecule_str=json.dumps(molecule_dict)
-    response = requests.get(url+'/?'+molecule_str)
+    response = requests.get(f'{url}/?{molecule_str}')
     return response.text

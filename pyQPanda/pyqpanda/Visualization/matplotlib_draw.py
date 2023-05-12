@@ -84,7 +84,7 @@ class Anchor:
 
     def plot_coord(self, index, gate_width, x_offset, layer_offset, last_h_pos):
         test_x_pos = index - self.__fold + 1 + 0.5 * \
-            (gate_width - 1) + x_offset + layer_offset
+                (gate_width - 1) + x_offset + layer_offset
         h_pos = index - self.__fold + 1
 
         # if self.__fold == h_pos:
@@ -94,29 +94,14 @@ class Anchor:
             self.__fold = index
             self.__flod_cnt += 1
 
-        # if last_h_pos > h_pos:
-        #     self.b_fold = True
-
-        # check folding
-        # if self.__fold > 0:
-        if True:
             # test_pos = index % self.__fold + 1 + 0.5 * ((2 * gate_width) - 1) + x_offset
             # if test_pos > 29:
             # if h_pos + (gate_width - 1) > self.__fold:
             # if last_h_pos > (h_pos + gate_width * 3):
-            if self.b_fold:
-                # if self.b_fold:
-                # index += self.__fold - (h_pos - 1)
-                tmp_offset = x_offset
-            else:
-                tmp_offset = x_offset + layer_offset
-            x_pos = index - self.__fold + 1 + 0.5 * (gate_width - 1)
-            #y_pos = self.__yind - (index // self.__fold) * (self.__reg_num + 1)
-            y_pos = self.__yind - (self.__flod_cnt) * (self.__reg_num + 1)
-        else:
-            x_pos = index + 1 + 0.5 * (gate_width - 1)
-            y_pos = self.__yind
-
+        tmp_offset = x_offset if self.b_fold else x_offset + layer_offset
+        x_pos = index - self.__fold + 1 + 0.5 * (gate_width - 1)
+        #y_pos = self.__yind - (index // self.__fold) * (self.__reg_num + 1)
+        y_pos = self.__yind - (self.__flod_cnt) * (self.__reg_num + 1)
         # could have been updated, so need to store
         self.gate_anchor = index
         # self.last_h_pos = h_pos
@@ -125,10 +110,7 @@ class Anchor:
 
     def is_locatable(self, index, gate_width):
         hold = [index + i for i in range(gate_width)]
-        for p in hold:
-            if p in self.__gate_placed:
-                return False
-        return True
+        return all(p not in self.__gate_placed for p in hold)
 
     def set_index(self, index, gate_width):
         # h_pos = index - self.__fold + 1
@@ -143,9 +125,7 @@ class Anchor:
         self.__gate_placed.sort()
 
     def get_index(self):
-        if self.__gate_placed:
-            return self.__gate_placed[-1] + 1
-        return 0
+        return self.__gate_placed[-1] + 1 if self.__gate_placed else 0
 
 
 class MatplotlibDrawer:
@@ -224,11 +204,9 @@ class MatplotlibDrawer:
 
     def _registers(self, creg, qreg):
         self._creg = []
-        for r in creg:
-            self._creg.append(r)
+        self._creg.extend(iter(creg))
         self._qreg = []
-        for r in qreg:
-            self._qreg.append(r)
+        self._qreg.extend(iter(qreg))
 
     @property
     def ast(self):
@@ -236,12 +214,12 @@ class MatplotlibDrawer:
 
     def _custom_multiqubit_gate(self, xy, cxy=None, fc=None, wide=True, text=None,
                                 subtext=None):
-        xpos = min([x[0] for x in xy])
-        ypos = min([y[1] for y in xy])
-        ypos_max = max([y[1] for y in xy])
+        xpos = min(x[0] for x in xy)
+        ypos = min(y[1] for y in xy)
+        ypos_max = max(y[1] for y in xy)
 
         if cxy:
-            ypos = min([y[1] for y in cxy])
+            ypos = min(y[1] for y in cxy)
         if wide:
             if subtext:
                 boxes_length = round(max([len(text), len(subtext)]) / 7) or 1
@@ -253,16 +231,16 @@ class MatplotlibDrawer:
 
         if fc:
             _fc = fc
-        else:
-            if self._style.name != 'Q1':
-                if self._style.gc != DefaultStyle().gc:
-                    _fc = self._style.gc
-                else:
-                    _fc = self._style.dispcol['multi']
-                _ec = self._style.dispcol['multi']
-            else:
-                _fc = self._style.gc
+        elif self._style.name == 'Q1':
+            _fc = self._style.gc
 
+        else:
+            _fc = (
+                self._style.gc
+                if self._style.gc != DefaultStyle().gc
+                else self._style.dispcol['multi']
+            )
+            _ec = self._style.dispcol['multi']
         qubit_span = abs(ypos) - abs(ypos_max) + 1
         height = HIG + (qubit_span - 1)
         box = patches.Rectangle(
@@ -273,7 +251,7 @@ class MatplotlibDrawer:
             linewidth=1.5, zorder=PORDER_GATE)
         self.ax.add_patch(box)
         # Annotate inputs
-        for bit, y in enumerate([x[1] for x in xy]):
+        for bit, y in enumerate(x[1] for x in xy):
             self.ax.text(xpos - 0.45 * wid, y, str(bit), ha='left', va='center',
                          fontsize=self._style.fs, color=self._style.gt,
                          clip_on=True, zorder=PORDER_TEXT)
@@ -311,15 +289,14 @@ class MatplotlibDrawer:
                 subtext_len = len(subtext)
                 if '$\\pi$' in subtext:
                     pi_count = subtext.count('pi')
-                    subtext_len = subtext_len - (4 * pi_count)
+                    subtext_len -= 4 * pi_count
 
                 boxes_wide = round(max(subtext_len, len(text)) / 10, 1) or 1
                 wid = WID * 1.5 * boxes_wide
             else:
                 boxes_wide = round(len(text) / 10) or 1
                 wid = WID * 2.2 * boxes_wide
-            if wid < WID:
-                wid = WID
+            wid = max(wid, WID)
         else:
             wid = WID
         if fc:
@@ -338,7 +315,6 @@ class MatplotlibDrawer:
 
         if text:
             font_size = self._style.fs
-            sub_font_size = self._style.sfs
             # check if gate is not unitary
             if text in ['RESET']:
                 disp_color = self._style.not_gate_lc
@@ -350,7 +326,7 @@ class MatplotlibDrawer:
                 sub_color = self._style.sc
 
             if text in self._style.disptex:
-                disp_text = "${}$".format(self._style.disptex[text])
+                disp_text = f"${self._style.disptex[text]}$"
             else:
                 disp_text = text
             if subtext:
@@ -358,6 +334,7 @@ class MatplotlibDrawer:
                              va='center', fontsize=font_size,
                              color=disp_color, clip_on=True,
                              zorder=PORDER_TEXT)
+                sub_font_size = self._style.sfs
                 self.ax.text(xpos, ypos - 0.3 * HIG, subtext, ha='center',
                              va='center', fontsize=sub_font_size,
                              color=sub_color, clip_on=True,
@@ -393,15 +370,8 @@ class MatplotlibDrawer:
     def _line(self, xy0, xy1, lc=None, ls=None, zorder=PORDER_LINE):
         x0, y0 = xy0
         x1, y1 = xy1
-        if lc is None:
-            linecolor = self._style.lc
-        else:
-            linecolor = lc
-        if ls is None:
-            linestyle = 'solid'
-        else:
-            linestyle = ls
-
+        linecolor = self._style.lc if lc is None else lc
+        linestyle = 'solid' if ls is None else ls
         if linestyle == 'doublet':
             theta = np.arctan2(np.abs(x1 - x0), np.abs(y1 - y0))
             dx = 0.05 * WID * np.cos(theta)
@@ -472,11 +442,7 @@ class MatplotlibDrawer:
     def _conds(self, xy, istrue=False):
         xpos, ypos = xy
 
-        if istrue:
-            _fc = self._style.lc
-        else:
-            _fc = self._style.gc
-
+        _fc = self._style.lc if istrue else self._style.gc
         box = patches.Circle(xy=(xpos, ypos), radius=WID * 0.15,
                              fc=_fc, ec=self._style.lc,
                              linewidth=1.5, zorder=PORDER_GATE)
@@ -502,23 +468,21 @@ class MatplotlibDrawer:
             tmp_op_name = tmp_op_name[:-4]
 
         if tmp_op_name in ['U1', 'U2', 'U3', 'U4', 'CU']:
-            color_str = 'U4'
+            return 'U4'
         elif tmp_op_name in ['X', 'Y', 'Z']:
-            color_str = 'X'
+            return 'X'
         elif tmp_op_name in ['I']:
-            color_str = 'I'
+            return 'I'
         elif tmp_op_name in ['X1', 'Y1', 'Z1', 'RX', 'RY', 'RZ']:
-            color_str = 'X1'
+            return 'X1'
         elif tmp_op_name in ['CNOT', 'CPHASE', 'CZ']:
-            color_str = 'CNOT'
+            return 'CNOT'
         elif tmp_op_name in ['H', 'S', 'T']:
-            color_str = 'H'
+            return 'H'
         elif tmp_op_name in ['SWAP', 'ISWAP', 'ISWAPTheta', 'SQISWAP']:
-            color_str = 'SWAP'
+            return 'SWAP'
         else:
-            color_str = 'multi'
-
-        return color_str
+            return 'multi'
 
     def set_multi_ctrl_bits(self, ctrl_state, num_ctrl_qubits, qbit, color_str):
         # convert op.ctrl_state to bit string and reverse
@@ -577,8 +541,8 @@ class MatplotlibDrawer:
     def _swap_gate(self, q_xy, gate_type, param, dagger, ctrl_qubits=0):
         font_size = self._style.sfs + 1
         if gate_type == GateType.ISWAP_THETA_GATE:
-            swap_sub_text = '{}'.format(param)
-            #font_size = self._style.sfs
+            swap_sub_text = f'{param}'
+                #font_size = self._style.sfs
         elif gate_type == GateType.ISWAP_GATE:
             swap_sub_text = 'iSWAP'
         elif gate_type == GateType.SQISWAP_GATE:
@@ -589,14 +553,14 @@ class MatplotlibDrawer:
                 if swap_sub_text[0] == '-':
                     swap_sub_text = swap_sub_text[1:]
                 else:
-                    swap_sub_text = '-' + swap_sub_text
+                    swap_sub_text = f'-{swap_sub_text}'
             else:
-                swap_sub_text = swap_sub_text + '.dag'
+                swap_sub_text = f'{swap_sub_text}.dag'
 
         if gate_type == GateType.ISWAP_THETA_GATE:
-            swap_sub_text = "{}".format(swap_sub_text)
+            swap_sub_text = f"{swap_sub_text}"
         else:
-            swap_sub_text = "${}$".format(self._style.disptex[swap_sub_text])
+            swap_sub_text = f"${self._style.disptex[swap_sub_text]}$"
 
         self._iswap(q_xy[ctrl_qubits], self._style.dispcol['ISWAP'],
                     fc=self._style.dispcol['ISWAP'], ec=self._style.dispcol['ISWAP'],
@@ -647,7 +611,7 @@ class MatplotlibDrawer:
                      color=self._style.not_gate_lc, linewidth=1, zorder=PORDER_GATE)
 
         # angle
-        if font_size == None:
+        if font_size is None:
             font_size = self._style.fs
         sub_color = self._style.sc
         self.ax.text(xpos, ypos-0.03, subtext, ha='center',
@@ -725,18 +689,14 @@ class MatplotlibDrawer:
         len_longest_label = 0
         # quantum register
         for ii, reg in enumerate(self._qreg):
-            if len(self._qreg) > 1:
-                if self.layout is None:
-                    label = '${{{name}}}_{{{index}}}$'.format(name='q',
-                                                              index=reg)
-                else:
-                    label = '${{{name}}}_{{{index}}} \\mapsto {{{physical}}}$'.format(
-                        name=self.layout[reg.index].register.name,
-                        index=self.layout[reg.index].index,
-                        physical=reg.index)
+            if len(self._qreg) > 1 and self.layout is None or len(self._qreg) <= 1:
+                label = '${{{name}}}_{{{index}}}$'.format(name='q',
+                                                          index=reg)
             else:
-                label = '${{{name}}}_{{{index}}}$'.format(name='q', index=reg)
-
+                label = '${{{name}}}_{{{index}}} \\mapsto {{{physical}}}$'.format(
+                    name=self.layout[reg.index].register.name,
+                    index=self.layout[reg.index].index,
+                    physical=reg.index)
             if len(label) > len_longest_label:
                 len_longest_label = len(label)
 
@@ -759,7 +719,7 @@ class MatplotlibDrawer:
                     self._creg, n_creg)):
                 pos = y_off - idx
                 if self._style.bundle:
-                    label = '${}$'.format('c')
+                    label = '$c$'
                     self._creg_dict[ii] = {
                         'y': pos,
                         'label': label,
@@ -794,10 +754,7 @@ class MatplotlibDrawer:
 
         # quantum register
         for qreg in self._qreg_dict.values():
-            if n_fold == 0:
-                label = qreg['label']
-            else:
-                label = qreg['label']
+            label = qreg['label']
             y = qreg['y'] - n_fold * (self._cond['n_lines'] + 1)
             self.ax.text(self.x_offset - 0.2, y, label, ha='right', va='center',
                          fontsize=1.25 * self._style.fs,
@@ -811,10 +768,7 @@ class MatplotlibDrawer:
         # classical register
         this_creg_dict = {}
         for creg in self._creg_dict.values():
-            if n_fold == 0:
-                label = creg['label']
-            else:
-                label = creg['label']
+            label = creg['label']
             y = creg['y'] - n_fold * (self._cond['n_lines'] + 1)
             if y not in this_creg_dict.keys():
                 this_creg_dict[y] = {'val': 1, 'label': label}
@@ -864,7 +818,7 @@ class MatplotlibDrawer:
         color = self._style.dispcol['multi']
         self._ctrl_qubit(qxy[0], fc=color, ec=color)
         self._ctrl_qubit(qxy[1], fc=color, ec=color)
-        self._sidetext(qreg_b, text='zz({})'.format(param))
+        self._sidetext(qreg_b, text=f'zz({param})')
         # add qubit-qubit wiring
         self._line(qreg_b, qreg_t, lc=color)
 
@@ -872,7 +826,7 @@ class MatplotlibDrawer:
         color = self._style.dispcol['multi']
         self._ctrl_qubit(qxy[0], fc=color, ec=color)
         self._ctrl_qubit(qxy[1], fc=color, ec=color)
-        self._sidetext(qreg_b, text='U1 ({})'.format(param))
+        self._sidetext(qreg_b, text=f'U1 ({param})')
 
         # add qubit-qubit wiring
         self._line(qreg_b, qreg_t, lc=color)
@@ -908,11 +862,9 @@ class MatplotlibDrawer:
         if self._style.name != 'Q1':
             color = self._style.dispcol['CZ']
             self._ctrl_qubit(q_xy[0], fc=color, ec=color)
-            self._gate(q_xy[1], wide=False, text=disp, fc=color)
         else:
             self._ctrl_qubit(q_xy[0])
-            self._gate(q_xy[1], wide=False, text=disp, fc=color)
-
+        self._gate(q_xy[1], wide=False, text=disp, fc=color)
         # add qubit-qubit wiring
         if self._style.name != 'Q1':
             self._line(qreg_b, qreg_t, lc=color)

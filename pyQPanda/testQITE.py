@@ -31,10 +31,7 @@ if __name__ == "__main__":
     ansatz << ansatz_list
     ansatz.insert(circuit)
 
-    theta_list = []
-    for i in range(7):
-        theta_list.append(random.rand())
-
+    theta_list = [random.rand() for _ in range(7)]
     print(ansatz)
     ansatz.set_thetas(theta_list)
     print(ansatz)
